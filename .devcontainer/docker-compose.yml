@@ -1,3 +1,5 @@
+name: "KotobaTrace"
+
 services:
   web:
     build:
@@ -6,20 +8,31 @@ services:
     volumes:
       - ..:/workspace
       - bundle:/usr/local/bundle
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
     depends_on:
+      - selenium
       - db
-    tty: true
-    command: tail -f /dev/null
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: vscode
+    
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
 
   db:
     image: postgres:18.6
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-password}
     volumes:
       - postgres_data:/var/lib/postgresql
-    ports:
-      - "5432:5432"
+    networks:
+    - default
+
+  selenium:
+    image: selenium/standalone-chromium
+    restart: unless-stopped
 
 volumes:
   bundle:

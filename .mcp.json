@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "rails": {
+      "command": "rails-mcp-server"
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": [
+        "postgres-mcp",
+        "--access-mode=unrestricted"
+      ],
+      "env": {
+        "DATABASE_URI": "postgresql://postgres:password@db:5432/kotoba_trace_development"
+      }
+    }
+  }
+}

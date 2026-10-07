@@ -2,7 +2,13 @@ require "set"
 
 module Anki
   class VocabularyIndex
-    def initialize(client: AnkiConnect::Client.new)
+    def initialize(client: AnkiConnect::Client.new(
+        endpoint: ENV.fetch(
+          "ANKI_CONNECT_URL",
+          "http://127.0.0.1:8765"
+        )
+      )
+    )
       @client = client
       @expressions = Set.new
       @scanned = false

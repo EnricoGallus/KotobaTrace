@@ -1,0 +1,46 @@
+<h1>KotobaTrace</h1>
+
+<%= form_with url: analysis_path, method: :post do %>
+  <div>
+    <%= text_area_tag :text, @text, rows: 10, cols: 80 %>
+  </div>
+
+  <%= submit_tag "Analyze" %>
+<% end %>
+
+<% if @tokens %>
+  <table>
+    <thead>
+      <tr>
+        <th>Surface</th>
+        <th>Base form</th>
+        <th>Reading</th>
+        <th>Part of speech</th>
+        <th>Anki</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @tokens.each do |result| %>
+        <% token = result[:token] %>
+
+        <tr>
+          <td><%= token.surface %></td>
+          <td><%= token.base_form %></td>
+          <td><%= token.reading %></td>
+          <td><%= token.part_of_speech %></td>
+          <td>
+            <% case result[:in_anki] %>
+            <% when true %>
+              ✓
+            <% when false %>
+              ✗
+            <% else %>
+              —
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
