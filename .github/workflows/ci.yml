@@ -81,6 +81,15 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Install MeCab
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+
+          libmecab_path="$(dpkg -L libmecab-dev | awk '/\/libmecab\.so$/ {print; exit}')"
+          test -f "$libmecab_path"
+          echo "MECAB_PATH=$libmecab_path" >> "$GITHUB_ENV"
+
       - name: Run tests
         env:
           RAILS_ENV: test
