@@ -31,7 +31,7 @@ RSpec.describe Anki::VocabularyIndex do
       collection = described_class.new(client:)
 
       collection.scan(
-        decks: ["Vocabulary"],
+        decks: [ "Vocabulary" ],
         expression_field: "Expression"
       )
 
@@ -58,7 +58,7 @@ RSpec.describe Anki::VocabularyIndex do
       collection = described_class.new(client:)
 
       collection.scan(
-        decks: ["Vocabulary"],
+        decks: [ "Vocabulary" ],
         expression_field: "Expression"
       )
 
@@ -83,7 +83,7 @@ RSpec.describe Anki::VocabularyIndex do
       collection = described_class.new(client:)
 
       collection.scan(
-        decks: ["Vocabulary"],
+        decks: [ "Vocabulary" ],
         expression_field: "Expression"
       )
 
