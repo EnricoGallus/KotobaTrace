@@ -14,8 +14,6 @@ gem "jsbundling-rails"
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails"
-# Bundle and process CSS [https://github.com/rails/cssbundling-rails]
-gem "cssbundling-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
@@ -73,3 +71,5 @@ end
 
 gem "natto", "~> 1.2"
 gem "anki_connect", "~> 0.2.0"
+
+gem "tailwindcss-rails", "~> 4.6"

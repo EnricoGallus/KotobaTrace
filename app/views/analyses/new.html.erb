@@ -1,46 +1,58 @@
-<h1>KotobaTrace</h1>
+<div class="mx-auto max-w-4xl px-5 pt-7 pb-20">
+  <h1 class="mb-6">KotobaTrace</h1>
 
-<%= form_with url: analysis_path, method: :post, data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
-  <div>
-    <%= text_area_tag :text, @text, rows: 10, cols: 80, data: { analyze_text_target: "textInput" } %>
-  </div>
+  <%= form_with url: analysis_path, method: :post,
+        class: "card card-border bg-base-100 mb-8",
+        data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
+    <div class="card-body">
+      <%= label_tag :text, "Text to analyze", class: "label" %>
+      <%= text_area_tag :text, @text, rows: 10, lang: "ja",
+            class: "textarea w-full",
+            data: { analyze_text_target: "textInput" } %>
 
-  <%= submit_tag "Analyze", data: { analyze_text_target: "submit" } %>
-<% end %>
+      <div class="card-actions justify-end">
+        <%= submit_tag "Analyze", class: "btn btn-primary",
+              data: { analyze_text_target: "submit" } %>
+      </div>
+    </div>
+  <% end %>
 
-<% if @tokens %>
-  <table>
-    <thead>
-      <tr>
-        <th>Surface</th>
-        <th>Base form</th>
-        <th>Reading</th>
-        <th>Part of speech</th>
-        <th>Anki</th>
-      </tr>
-    </thead>
+  <% if @tokens %>
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>Base form</th>
+            <th>Reading</th>
+            <th>Part of speech</th>
+            <th>Anki</th>
+          </tr>
+        </thead>
 
-    <tbody>
-      <% @tokens.each do |result| %>
-        <% token = result[:token] %>
+        <tbody>
+          <% @tokens.each do |result| %>
+            <% token = result[:token] %>
 
-        <tr>
-          <td><%= token.surface %></td>
-          <td><%= token.base_form %></td>
-          <td><%= token.reading %></td>
-          <td><%= token.part_of_speech %></td>
-          <td>
-            <% case result[:in_anki] %>
-            <% when true %>
-              ✓
-            <% when false %>
-              ✗
-            <% else %>
-              —
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% end %>
+            <tr class="hover:bg-base-200">
+              <td lang="ja" class="text-lg font-medium"><%= token.surface %></td>
+              <td lang="ja"><%= token.base_form %></td>
+              <td lang="ja" class="text-base-content/70"><%= token.reading %></td>
+              <td class="text-base-content/70"><%= token.part_of_speech %></td>
+              <td>
+                <% case result[:in_anki] %>
+                <% when true %>
+                  <span class="badge badge-success badge-sm" title="In Anki">✓</span>
+                <% when false %>
+                  <span class="badge badge-warning badge-soft badge-sm" title="Not in Anki">✗</span>
+                <% else %>
+                  <span class="text-base-content/40" title="Not checked">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

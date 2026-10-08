@@ -1,0 +1,172 @@
+/*
+ * Autumn Climbs — daisyUI 5 theme for Tailwind CSS 4
+ *
+ * Extracted from "Autumn Climbs — Tour de Chiba & Tsumagoi-100".
+ * Warm paper background, forest-ink text, earthy accents, flat (no shadows),
+ * Fraunces for headings and Work Sans for body text.
+ *
+ * Add this to your <head> (same fonts as the original page):
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+ *
+ * Themes:
+ *   autumn-climbs        light, default
+ *   autumn-climbs-dark   dark, used automatically when the OS prefers dark
+ * Force one with <html data-theme="autumn-climbs"> or "autumn-climbs-dark".
+ */
+
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* ------------------------------------------------------------------ */
+/* Light                                                               */
+/* ------------------------------------------------------------------ */
+@plugin "daisyui/theme" {
+  name: "autumn-climbs";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* surfaces: --surface / --bg / --line in the original */
+  --color-base-100: #F4F2E9; /* cards, panels   (--surface) */
+  --color-base-200: #E7E4D8; /* page background (--bg)      */
+  --color-base-300: #D3CFC0; /* borders, dividers (--line)  */
+  --color-base-content: #1E231C; /* --ink */
+
+  /* climb / build */
+  --color-primary: #B84E22;
+  --color-primary-content: #FFFFFF;
+  /* yoga */
+  --color-secondary: #2E6B70;
+  --color-secondary-content: #FFFFFF;
+  /* strength */
+  --color-accent: #6E5A8C;
+  --color-accent-content: #FFFFFF;
+  /* ink: the active tab pill (ink background, page-colored text) */
+  --color-neutral: #1E231C;
+  --color-neutral-content: #E7E4D8;
+
+  /* swim */
+  --color-info: #3A7CA5;
+  --color-info-content: #FFFFFF;
+  /* easy / recovery */
+  --color-success: #4F7A46;
+  --color-success-content: #FFFFFF;
+  /* race day (original uses dark text on the gold badge) */
+  --color-warning: #A9740F;
+  --color-warning-content: #1E231C;
+  /* not in the original; chosen to sit in the same earthy range */
+  --color-error: #A63A2E;
+  --color-error-content: #FFFFFF;
+
+  /* shape: 10-16px corners, pill badges/tabs, 1px borders, completely flat */
+  --radius-selector: 1rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark                                                                */
+/* ------------------------------------------------------------------ */
+@plugin "daisyui/theme" {
+  name: "autumn-climbs-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: #1B211A; /* --surface */
+  --color-base-200: #141914; /* --bg      */
+  --color-base-300: #33392F; /* --line    */
+  --color-base-content: #ECE8DD; /* --ink */
+
+  --color-primary: #D9713F;
+  --color-primary-content: #141914;
+  --color-secondary: #7FBEC4;
+  --color-secondary-content: #141914;
+  --color-accent: #B09EDA;
+  --color-accent-content: #141914;
+  --color-neutral: #ECE8DD;
+  --color-neutral-content: #141914;
+
+  /* the original keeps swim at #3A7CA5 in dark; lifted here to match the other accents */
+  --color-info: #5FA0C9;
+  --color-info-content: #141914;
+  --color-success: #82AC72;
+  --color-success-content: #141914;
+  --color-warning: #E3B152;
+  --color-warning-content: #141914;
+  /* not in the original */
+  --color-error: #E0766B;
+  --color-error-content: #141914;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fonts + extra tokens that have no daisyUI slot                      */
+/* ------------------------------------------------------------------ */
+@theme {
+  --font-sans: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  /* usage: bg-rest, bg-warn-soft text-warn-soft-content */
+  --color-rest: #7C7767;               /* --accent-rest: rest days            */
+  --color-warn-soft: #F4E3C7;          /* --warn-bg: tinted notice banner     */
+  --color-warn-soft-content: #7A4A0A;  /* --warn-ink                          */
+}
+
+/* dark values for the extra tokens (same trigger rules as the themes above) */
+[data-theme="autumn-climbs-dark"] {
+  --color-rest: #9A9587;
+  --color-warn-soft: #3A2E12;
+  --color-warn-soft-content: #EBC079;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-rest: #9A9587;
+    --color-warn-soft: #3A2E12;
+    --color-warn-soft-content: #EBC079;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Base: page background, type                                         */
+/* ------------------------------------------------------------------ */
+@layer base {
+  /* original page is --bg (base-200) with lighter cards (base-100) on top */
+  :root {
+    --root-bg: var(--color-base-200);
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  body {
+    background-color: var(--color-base-200);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4,
+  .card-title,
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  h1 {
+    font-size: clamp(30px, 6vw, 46px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+}
