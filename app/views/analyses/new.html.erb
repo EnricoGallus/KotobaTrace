@@ -1,10 +1,13 @@
 <div class="mx-auto max-w-4xl px-5 pt-7 pb-20">
+  <%= turbo_stream_from @stream_key %>
+
   <h1 class="mb-6">KotobaTrace</h1>
 
   <%= form_with url: analysis_path, method: :post,
         class: "card card-border bg-base-100 mb-8",
         data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
     <div class="card-body">
+      <%= hidden_field_tag :stream_key, @stream_key %>
       <%= label_tag :text, "Text to analyze", class: "label" %>
       <%= text_area_tag :text, @text, rows: 10, lang: "ja",
             class: "textarea w-full",
@@ -17,42 +20,7 @@
     </div>
   <% end %>
 
-  <% if @tokens %>
-    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Surface</th>
-            <th>Base form</th>
-            <th>Reading</th>
-            <th>Part of speech</th>
-            <th>Anki</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <% @tokens.each do |result| %>
-            <% token = result[:token] %>
-
-            <tr class="hover:bg-base-200">
-              <td lang="ja" class="text-lg font-medium"><%= token.surface %></td>
-              <td lang="ja"><%= token.base_form %></td>
-              <td lang="ja" class="text-base-content/70"><%= token.reading %></td>
-              <td class="text-base-content/70"><%= token.part_of_speech %></td>
-              <td>
-                <% case result[:in_anki] %>
-                <% when true %>
-                  <span class="badge badge-success badge-sm" title="In Anki">✓</span>
-                <% when false %>
-                  <span class="badge badge-warning badge-soft badge-sm" title="Not in Anki">✗</span>
-                <% else %>
-                  <span class="text-base-content/40" title="Not checked">—</span>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  <% end %>
+  <div id="analysis_results">
+    <p class="text-base-content/70">Your analysis results will appear here.</p>
+  </div>
 </div>

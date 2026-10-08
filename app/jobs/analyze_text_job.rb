@@ -1,8 +1,8 @@
 class AnalyzeTextJob < ApplicationJob
   queue_as :default
 
-  def perform(text)
-    tokens = Japanese::Tokenizer.call(@text)
+  def perform(text, stream_key)
+    tokens = Japanese::Tokenizer.call(text)
 
     collection = Anki::VocabularyIndex.new
 
@@ -11,7 +11,7 @@ class AnalyzeTextJob < ApplicationJob
       expression_field: "Expression"
     )
 
-    @tokens = tokens.map do |token|
+    results = tokens.map do |token|
       {
         token:,
         in_anki: vocabulary_token?(token) ?
@@ -19,6 +19,18 @@ class AnalyzeTextJob < ApplicationJob
           nil
       }
     end
-    AnalyzeController.broadcast_result(@tokens)
+
+    Turbo::StreamsChannel.broadcast_update_to(
+      stream_key,
+      target: "analysis_results",
+      partial: "analyses/results",
+      locals: { results: results }
+    )
+  end
+
+  private
+
+  def vocabulary_token?(token)
+    %w[名詞 動詞 形容詞].include?(token.part_of_speech)
   end
 end

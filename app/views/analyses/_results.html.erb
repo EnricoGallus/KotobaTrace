@@ -1,0 +1,36 @@
+<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Surface</th>
+        <th>Base form</th>
+        <th>Reading</th>
+        <th>Part of speech</th>
+        <th>Anki</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% results.each do |result| %>
+        <% token = result[:token] %>
+
+        <tr class="hover:bg-base-200">
+          <td lang="ja" class="text-lg font-medium"><%= token.surface %></td>
+          <td lang="ja"><%= token.base_form %></td>
+          <td lang="ja" class="text-base-content/70"><%= token.reading %></td>
+          <td class="text-base-content/70"><%= token.part_of_speech %></td>
+          <td>
+            <% case result[:in_anki] %>
+            <% when true %>
+              <span class="badge badge-success badge-sm" title="In Anki">✓</span>
+            <% when false %>
+              <span class="badge badge-warning badge-soft badge-sm" title="Not in Anki">✗</span>
+            <% else %>
+              <span class="text-base-content/40" title="Not checked">—</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
