@@ -1,11 +1,11 @@
 <h1>KotobaTrace</h1>
 
-<%= form_with url: analysis_path, method: :post, data: { turbo: false } do %>
+<%= form_with url: analysis_path, method: :post, data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
   <div>
-    <%= text_area_tag :text, @text, rows: 10, cols: 80 %>
+    <%= text_area_tag :text, @text, rows: 10, cols: 80, data: { analyze_text_target: "textInput" } %>
   </div>
 
-  <%= submit_tag "Analyze" %>
+  <%= submit_tag "Analyze", data: { analyze_text_target: "submit" } %>
 <% end %>
 
 <% if @tokens %>

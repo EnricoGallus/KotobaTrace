@@ -4,5 +4,8 @@
 
 import { application } from "./application"
 
+import AnalyzeTextController from "./analyze_text_controller"
+application.register("analyze-text", AnalyzeTextController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
