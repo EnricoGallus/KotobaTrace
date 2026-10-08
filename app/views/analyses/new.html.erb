@@ -1,6 +1,6 @@
 <h1>KotobaTrace</h1>
 
-<%= form_with url: analysis_path, method: :post do %>
+<%= form_with url: analysis_path, method: :post, data: { turbo: false } do %>
   <div>
     <%= text_area_tag :text, @text, rows: 10, cols: 80 %>
   </div>

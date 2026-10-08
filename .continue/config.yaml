@@ -1,0 +1,21 @@
+name: Local Coding
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Qwen Coder Autocomplete
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    roles:
+      - autocomplete
+  - name: Qwen Coder Chat
+    provider: ollama
+    model: qwen2.5-coder:7b
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+    defaultCompletionOptions:
+      contextLength: 16384
