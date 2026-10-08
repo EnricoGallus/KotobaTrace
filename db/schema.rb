@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_051242) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_073200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,19 +41,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_051242) do
     t.index ["word_id"], name: "index_word_assessments_on_word_id"
   end
 
-  create_table "word_occurrences", force: :cascade do |t|
-    t.bigint "analysis_id", null: false
-    t.bigint "word_id", null: false
-    t.integer "position"
-    t.string "surface"
-    t.string "surface_reading"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["analysis_id", "position"], name: "index_word_occurrences_on_analysis_id_and_position", unique: true
-    t.index ["analysis_id"], name: "index_word_occurrences_on_analysis_id"
-    t.index ["word_id"], name: "index_word_occurrences_on_word_id"
-  end
-
   create_table "words", force: :cascade do |t|
     t.string "lemma"
     t.string "part_of_speech"
@@ -66,6 +53,4 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_051242) do
   add_foreign_key "word_assessments", "analyses"
   add_foreign_key "word_assessments", "assessment_choices"
   add_foreign_key "word_assessments", "words"
-  add_foreign_key "word_occurrences", "analyses"
-  add_foreign_key "word_occurrences", "words"
 end
