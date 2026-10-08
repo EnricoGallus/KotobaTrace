@@ -21,9 +21,11 @@ RSpec.describe AnalyzeTextJob, type: :job do
         target: "analysis_results",
         partial: "analyses/results",
         locals: { results: [ { token: token, in_anki: true } ] }
-      )
+      ) do
+        expect(I18n.locale).to eq(:ja)
+      end
 
-      described_class.perform_now("猫", "stream-123")
+      described_class.perform_now("猫", "stream-123", "ja")
     end
   end
 end

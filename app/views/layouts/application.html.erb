@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "Kotoba Trace" %></title>
+    <title><%= content_for(:title) || t("app.name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Kotoba Trace">
@@ -24,6 +24,12 @@
   </head>
 
   <body>
+    <nav class="container mx-auto mt-4 flex justify-end gap-3 px-5" aria-label="<%= t("language.choose") %>">
+      <%= link_to t("language.english"), url_for(locale: :en), lang: "en",
+            aria: { current: I18n.locale == :en ? "page" : nil } %>
+      <%= link_to t("language.japanese"), url_for(locale: :ja), lang: "ja",
+            aria: { current: I18n.locale == :ja ? "page" : nil } %>
+    </nav>
     <main class="container mx-auto mt-28 px-5 flex">
       <%= yield %>
     </main>

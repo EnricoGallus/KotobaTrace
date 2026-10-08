@@ -2,11 +2,11 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Surface</th>
-        <th>Base form</th>
-        <th>Reading</th>
-        <th>Part of speech</th>
-        <th>Anki</th>
+        <th><%= t("analyses.columns.surface") %></th>
+        <th><%= t("analyses.columns.base_form") %></th>
+        <th><%= t("analyses.columns.reading") %></th>
+        <th><%= t("analyses.columns.part_of_speech") %></th>
+        <th><%= t("analyses.columns.anki") %></th>
       </tr>
     </thead>
 
@@ -22,11 +22,11 @@
           <td>
             <% case result[:in_anki] %>
             <% when true %>
-              <span class="badge badge-success badge-sm" title="In Anki">✓</span>
+              <span class="badge badge-success badge-sm" title="<%= t("analyses.anki_status.included") %>">✓</span>
             <% when false %>
-              <span class="badge badge-warning badge-soft badge-sm" title="Not in Anki">✗</span>
+              <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.anki_status.not_included") %>">✗</span>
             <% else %>
-              <span class="text-base-content/40" title="Not checked">—</span>
+              <span class="text-base-content/40" title="<%= t("analyses.anki_status.not_checked") %>">—</span>
             <% end %>
           </td>
         </tr>

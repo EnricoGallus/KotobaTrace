@@ -1,26 +1,26 @@
 <div class="mx-auto max-w-4xl px-5 pt-7 pb-20">
   <%= turbo_stream_from @stream_key %>
 
-  <h1 class="mb-6">KotobaTrace</h1>
+  <h1 class="mb-6"><%= t("app.name") %></h1>
 
   <%= form_with url: analysis_path, method: :post,
         class: "card card-border bg-base-100 mb-8",
         data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
     <div class="card-body">
       <%= hidden_field_tag :stream_key, @stream_key %>
-      <%= label_tag :text, "Text to analyze", class: "label" %>
+      <%= label_tag :text, t("analyses.text_label"), class: "label" %>
       <%= text_area_tag :text, @text, rows: 10, lang: "ja",
             class: "textarea w-full",
             data: { analyze_text_target: "textInput" } %>
 
       <div class="card-actions justify-end">
-        <%= submit_tag "Analyze", class: "btn btn-primary",
+        <%= submit_tag t("analyses.submit"), class: "btn btn-primary",
               data: { analyze_text_target: "submit" } %>
       </div>
     </div>
   <% end %>
 
   <div id="analysis_results">
-    <p class="text-base-content/70">Your analysis results will appear here.</p>
+    <p class="text-base-content/70"><%= t("analyses.empty_results") %></p>
   </div>
 </div>
