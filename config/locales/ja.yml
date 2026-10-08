@@ -5,6 +5,12 @@ ja:
     choose: 言語を選択
     english: English
     japanese: 日本語
+  assessment_choices:
+    ignore: スキップ
+    unknown: まだ知らない
+    reading_only: 読みだけ知っている
+    meaning_only: 意味だけ知っている
+    known: 読みも意味も知っている
   analyses:
     text_label: 解析するテキスト
     submit: 解析

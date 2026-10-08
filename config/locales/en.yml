@@ -5,6 +5,12 @@ en:
     choose: Choose language
     english: English
     japanese: Japanese
+  assessment_choices:
+    ignore: Ignore
+    unknown: Don't know yet
+    reading_only: Know the reading only
+    meaning_only: Know the meaning only
+    known: Know both
   analyses:
     text_label: Text to analyze
     submit: Analyze
