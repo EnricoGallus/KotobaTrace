@@ -10,8 +10,62 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_051242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "analyses", force: :cascade do |t|
+    t.text "text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "assessment_choices", force: :cascade do |t|
+    t.string "key"
+    t.string "label"
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "word_assessments", force: :cascade do |t|
+    t.bigint "analysis_id", null: false
+    t.bigint "word_id", null: false
+    t.datetime "assessed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "assessment_choice_id"
+    t.index ["analysis_id", "word_id"], name: "index_word_assessments_on_analysis_id_and_word_id", unique: true
+    t.index ["analysis_id"], name: "index_word_assessments_on_analysis_id"
+    t.index ["assessment_choice_id"], name: "index_word_assessments_on_assessment_choice_id"
+    t.index ["word_id"], name: "index_word_assessments_on_word_id"
+  end
+
+  create_table "word_occurrences", force: :cascade do |t|
+    t.bigint "analysis_id", null: false
+    t.bigint "word_id", null: false
+    t.integer "position"
+    t.string "surface"
+    t.string "surface_reading"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["analysis_id", "position"], name: "index_word_occurrences_on_analysis_id_and_position", unique: true
+    t.index ["analysis_id"], name: "index_word_occurrences_on_analysis_id"
+    t.index ["word_id"], name: "index_word_occurrences_on_word_id"
+  end
+
+  create_table "words", force: :cascade do |t|
+    t.string "lemma"
+    t.string "part_of_speech"
+    t.string "dictionary_reading"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lemma", "part_of_speech"], name: "index_words_on_lemma_and_part_of_speech", unique: true
+  end
+
+  add_foreign_key "word_assessments", "analyses"
+  add_foreign_key "word_assessments", "assessment_choices"
+  add_foreign_key "word_assessments", "words"
+  add_foreign_key "word_occurrences", "analyses"
+  add_foreign_key "word_occurrences", "words"
 end

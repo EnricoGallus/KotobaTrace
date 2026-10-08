@@ -1,0 +1,2 @@
+class AssessmentChoice < ApplicationRecord
+end
