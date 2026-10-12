@@ -57,4 +57,62 @@ RSpec.describe "Analyses", type: :request do
       expect(response.body).to include("解析中…")
     end
   end
+
+  describe "POST /analysis/save" do
+    it "creates the analysis, links an existing word, and saves its assessment choice" do
+      word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネコ")
+      choice = AssessmentChoice.create!(key: "known", position: 4)
+
+      post save_analysis_path,
+        params: {
+          analysis: {
+            text: "猫",
+            word_assessments_attributes: {
+              "0" => {
+                lemma: "猫",
+                part_of_speech: "名詞",
+                dictionary_reading: "ネコ",
+                assessment_choice_id: choice.id,
+                in_anki: "true",
+                surfaces: [ "猫" ]
+              }
+            }
+          }
+        },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      analysis = Analysis.last
+      assessment = analysis.word_assessments.sole
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(analysis.text).to eq("猫")
+      expect(assessment.word).to eq(word)
+      expect(assessment.assessment_choice).to eq(choice)
+    end
+
+    it "creates a word when no matching word exists" do
+      choice = AssessmentChoice.create!(key: "unknown", position: 1)
+
+      post save_analysis_path,
+        params: {
+          analysis: {
+            text: "犬",
+            word_assessments_attributes: {
+              "0" => {
+                lemma: "犬",
+                part_of_speech: "名詞",
+                dictionary_reading: "イヌ",
+                assessment_choice_id: choice.id,
+                surfaces: [ "犬" ]
+              }
+            }
+          }
+        },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      expect(response).to have_http_status(:ok)
+      expect(Word.find_by!(lemma: "犬", part_of_speech: "名詞").dictionary_reading).to eq("イヌ")
+      expect(Analysis.last.words.pluck(:lemma)).to eq([ "犬" ])
+    end
+  end
 end

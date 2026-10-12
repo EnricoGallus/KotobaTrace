@@ -14,20 +14,32 @@ class AnalyzeTextJob < ApplicationJob
         expression_field: "Expression"
       )
 
-      results = tokens.map do |token|
-        {
-          token:,
-          in_anki: vocabulary_token?(token) ?
-            collection.include?(token.base_form) :
-            nil
-        }
+      analysis = Analysis.new(text: text)
+      token_groups = tokens.group_by { |token| [ token.base_form, token.part_of_speech ] }
+      existing_words = Word.where(lemma: token_groups.keys.map(&:first).uniq)
+        .index_by { |word| [ word.lemma, word.part_of_speech ] }
+
+      token_groups.each do |(lemma, part_of_speech), word_tokens|
+        word = existing_words[[ lemma, part_of_speech ]] || Word.new(
+          lemma: lemma,
+          part_of_speech: part_of_speech,
+          dictionary_reading: word_tokens.first.reading
+        )
+        assessment = analysis.word_assessments.build(word: word)
+        assessment.surfaces = word_tokens.map(&:surface).uniq
+        assessment.in_anki = vocabulary_token?(word_tokens.first) ?
+          collection.include?(lemma) :
+          nil
       end
 
       Turbo::StreamsChannel.broadcast_update_to(
         stream_key,
         target: "analysis_results",
         partial: "analyses/results",
-        locals: { results: results }
+        locals: {
+          analysis: analysis,
+          assessment_choices: AssessmentChoice.order(:position)
+        }
       )
     end
   end

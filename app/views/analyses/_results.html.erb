@@ -1,36 +1,66 @@
-<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-  <table class="table">
-    <thead>
-      <tr>
-        <th><%= t("analyses.columns.surface") %></th>
-        <th><%= t("analyses.columns.base_form") %></th>
-        <th><%= t("analyses.columns.reading") %></th>
-        <th><%= t("analyses.columns.part_of_speech") %></th>
-        <th><%= t("analyses.columns.anki") %></th>
-      </tr>
-    </thead>
+<%= form_with url: save_analysis_path, scope: :analysis, method: :post do |form| %>
+  <%= form.hidden_field :text, value: analysis.text %>
 
-    <tbody>
-      <% results.each do |result| %>
-        <% token = result[:token] %>
+  <% if local_assigns[:saved] %>
+    <p class="mb-3 text-success"><%= t("analyses.saved") %></p>
+  <% end %>
 
-        <tr class="hover:bg-base-200">
-          <td lang="ja" class="text-lg font-medium"><%= token.surface %></td>
-          <td lang="ja"><%= token.base_form %></td>
-          <td lang="ja" class="text-base-content/70"><%= token.reading %></td>
-          <td class="text-base-content/70"><%= token.part_of_speech %></td>
-          <td>
-            <% case result[:in_anki] %>
-            <% when true %>
-              <span class="badge badge-success badge-sm" title="<%= t("analyses.anki_status.included") %>">✓</span>
-            <% when false %>
-              <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.anki_status.not_included") %>">✗</span>
-            <% else %>
-              <span class="text-base-content/40" title="<%= t("analyses.anki_status.not_checked") %>">—</span>
-            <% end %>
-          </td>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><%= t("analyses.columns.surface") %></th>
+          <th><%= t("analyses.columns.base_form") %></th>
+          <th><%= t("analyses.columns.reading") %></th>
+          <th><%= t("analyses.columns.part_of_speech") %></th>
+          <th><%= t("analyses.columns.anki") %></th>
+          <th><%= t("analyses.columns.assessment") %></th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+      </thead>
+
+      <tbody>
+        <% analysis.word_assessments.each_with_index do |assessment, index| %>
+          <% word = assessment.word %>
+          <% field_name = "analysis[word_assessments_attributes][#{index}]" %>
+
+          <tr class="hover:bg-base-200">
+            <td lang="ja" class="text-lg font-medium">
+              <% assessment.surfaces.to_a.each_with_index do |surface, surface_index| %>
+                <% if surface_index.positive? %><span>, </span><% end %>
+                <%= surface %>
+                <%= hidden_field_tag "#{field_name}[surfaces][]", surface %>
+              <% end %>
+            </td>
+            <td lang="ja"><%= word.lemma %></td>
+            <td lang="ja" class="text-base-content/70"><%= word.dictionary_reading %></td>
+            <td class="text-base-content/70"><%= word.part_of_speech %></td>
+            <td>
+              <% case assessment.in_anki %>
+              <% when true %>
+                <span class="badge badge-success badge-sm" title="<%= t("analyses.anki_status.included") %>">✓</span>
+              <% when false %>
+                <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.anki_status.not_included") %>">✗</span>
+              <% else %>
+                <span class="text-base-content/40" title="<%= t("analyses.anki_status.not_checked") %>">—</span>
+              <% end %>
+              <%= hidden_field_tag "#{field_name}[in_anki]", assessment.in_anki %>
+            </td>
+            <td>
+              <%= hidden_field_tag "#{field_name}[lemma]", word.lemma %>
+              <%= hidden_field_tag "#{field_name}[part_of_speech]", word.part_of_speech %>
+              <%= hidden_field_tag "#{field_name}[dictionary_reading]", word.dictionary_reading %>
+              <%= select_tag "#{field_name}[assessment_choice_id]",
+                    options_from_collection_for_select(assessment_choices, :id, :label, assessment.assessment_choice_id),
+                    prompt: t("analyses.assessment_prompt"),
+                    class: "select select-bordered select-sm" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex justify-end">
+    <%= form.submit t("analyses.save"), class: "btn btn-primary" %>
+  </div>
+<% end %>

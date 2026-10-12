@@ -14,6 +14,9 @@ ja:
   analyses:
     text_label: 解析するテキスト
     submit: 解析
+    save: 保存
+    saved: 変更を保存しました。
+    assessment_prompt: 評価を選択
     in_progress: 解析中…
     empty_results: 解析結果がここに表示されます。
     columns:
@@ -22,6 +25,7 @@ ja:
       reading: 読み
       part_of_speech: 品詞
       anki: Anki
+      assessment: 評価
     anki_status:
       included: Ankiに登録済み
       not_included: Ankiに未登録

@@ -14,6 +14,9 @@ en:
   analyses:
     text_label: Text to analyze
     submit: Analyze
+    save: Save
+    saved: Changes saved.
+    assessment_prompt: Choose an assessment
     in_progress: "Analysis in progress…"
     empty_results: Your analysis results will appear here.
     columns:
@@ -22,6 +25,7 @@ en:
       reading: Reading
       part_of_speech: Part of speech
       anki: Anki
+      assessment: Assessment
     anki_status:
       included: In Anki
       not_included: Not in Anki
