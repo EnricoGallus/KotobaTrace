@@ -1,7 +1,27 @@
-require "rails_helper"
+require_relative "../../support/japanese_services"
 
-RSpec.describe Japanese::Tokenizer do
+RSpec.describe Japanese::MorphologicalAnalyzer do
   describe ".call" do
+    it "retains raw positions, POS subtypes and conjugation metadata" do
+      morphemes = described_class.call("政府は対応を促した。")
+      expect(morphemes.map(&:position)).to eq((0...morphemes.length).to_a)
+      verb = morphemes.find { |morpheme| morpheme.surface == "促し" }
+      expect(verb.conjugation_type).not_to be_nil
+      expect(verb.conjugation_form).not_to be_nil
+      expect(morphemes.find { |morpheme| morpheme.surface == "は" }.pos_subtype1).to eq("係助詞")
+    end
+
+    it "normalizes missing feature values without dropping unknown words" do
+      node = double(surface: "unknown", feature: "名詞,一般,*,*,*,*,*,*")
+      allow(node).to receive_messages(is_bos?: false, is_eos?: false)
+      mecab = double(enum_parse: [ node ])
+      morpheme = described_class.new("unknown", mecab: mecab).call.first
+      expect(morpheme.base_form).to eq("unknown")
+      expect(morpheme.reading).to be_nil
+      expect(morpheme.pos_subtype2).to be_nil
+      expect(morpheme.conjugation_form).to be_nil
+    end
+
     it "returns no tokens for empty text" do
       expect(described_class.call("")).to eq([])
     end

@@ -3,17 +3,25 @@ require 'rails_helper'
 RSpec.describe AnalyzeTextJob, type: :job do
   describe "#perform" do
     it "builds an unsaved analysis with associated words and broadcasts it" do
-      token = Japanese::Tokenizer::Token.new(
+      candidate = Japanese::VocabularyCandidate.new(
         surface: "猫",
         base_form: "猫",
         reading: "ネコ",
-        part_of_speech: "名詞"
+        part_of_speech: "名詞",
+        kind: :vocabulary,
+        morphemes: []
       )
       index = instance_double(Anki::VocabularyIndex)
       existing_word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネコ")
       broadcast_locals = nil
 
-      allow(Japanese::Tokenizer).to receive(:call).with("猫").and_return([ token ])
+      morphemes = []
+      allow(Japanese::MorphologicalAnalyzer).to receive(:call).with("猫").and_return(morphemes)
+      allow(Japanese::VocabularyExtractor).to receive(:call).with(morphemes).and_return([
+        candidate,
+        candidate.with(surface: "田中様", base_form: "田中", kind: :name),
+        candidate.with(surface: "三十分", base_form: "三十分", kind: :number)
+      ])
       allow(Anki::VocabularyIndex).to receive(:new).and_return(index)
       allow(index).to receive(:scan).and_return(index)
       allow(index).to receive(:include?).with("猫").and_return(true)

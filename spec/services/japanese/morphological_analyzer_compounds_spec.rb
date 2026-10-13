@@ -1,6 +1,6 @@
-require "rails_helper"
+require_relative "../../support/japanese_services"
 
-RSpec.describe Japanese::Tokenizer do
+RSpec.describe Japanese::MorphologicalAnalyzer do
   describe "compound segmentation" do
     compounds = [
       "社会保障",

@@ -5,7 +5,9 @@ class AnalyzeTextJob < ApplicationJob
     locale = I18n.available_locales.find { |available| available.to_s == locale.to_s } || I18n.default_locale
 
     I18n.with_locale(locale) do
-      tokens = Japanese::Tokenizer.call(text)
+      morphemes = Japanese::MorphologicalAnalyzer.call(text)
+      candidates = Japanese::VocabularyExtractor.call(morphemes)
+        .select { |candidate| candidate.kind == :vocabulary }
 
       collection = Anki::VocabularyIndex.new
 
@@ -15,21 +17,19 @@ class AnalyzeTextJob < ApplicationJob
       )
 
       analysis = Analysis.new(text: text)
-      token_groups = tokens.group_by { |token| [ token.base_form, token.part_of_speech ] }
-      existing_words = Word.where(lemma: token_groups.keys.map(&:first).uniq)
+      candidate_groups = candidates.group_by { |candidate| [ candidate.base_form, candidate.part_of_speech ] }
+      existing_words = Word.where(lemma: candidate_groups.keys.map(&:first).uniq)
         .index_by { |word| [ word.lemma, word.part_of_speech ] }
 
-      token_groups.each do |(lemma, part_of_speech), word_tokens|
+      candidate_groups.each do |(lemma, part_of_speech), word_candidates|
         word = existing_words[[ lemma, part_of_speech ]] || Word.new(
           lemma: lemma,
           part_of_speech: part_of_speech,
-          dictionary_reading: word_tokens.first.reading
+          dictionary_reading: word_candidates.first.reading
         )
         assessment = analysis.word_assessments.build(word: word)
-        assessment.surfaces = word_tokens.map(&:surface).uniq
-        assessment.in_anki = vocabulary_token?(word_tokens.first) ?
-          collection.include?(lemma) :
-          nil
+        assessment.surfaces = word_candidates.map(&:surface).uniq
+        assessment.in_anki = collection.include?(lemma)
       end
 
       Turbo::StreamsChannel.broadcast_update_to(
@@ -42,11 +42,5 @@ class AnalyzeTextJob < ApplicationJob
         }
       )
     end
-  end
-
-  private
-
-  def vocabulary_token?(token)
-    %w[名詞 動詞 形容詞].include?(token.part_of_speech)
   end
 end

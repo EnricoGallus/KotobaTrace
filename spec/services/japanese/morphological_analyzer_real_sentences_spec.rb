@@ -1,6 +1,6 @@
-require "rails_helper"
+require_relative "../../support/japanese_services"
 
-RSpec.describe Japanese::Tokenizer do
+RSpec.describe Japanese::MorphologicalAnalyzer do
   describe "realistic Japanese sentences" do
     examples = [
       {
