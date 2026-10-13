@@ -15,7 +15,6 @@ en:
     text_label: Text to analyze
     submit: Analyze
     save: Save
-    saved: Changes saved.
     assessment_prompt: Choose an assessment
     in_progress: "Analysis in progress…"
     empty_results: Your analysis results will appear here.

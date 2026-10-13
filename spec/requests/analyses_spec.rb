@@ -69,9 +69,11 @@ RSpec.describe "Analyses", type: :request do
             text: "猫",
             word_assessments_attributes: {
               "0" => {
-                lemma: "猫",
-                part_of_speech: "名詞",
-                dictionary_reading: "ネコ",
+                word_attributes: {
+                  lemma: "猫",
+                  part_of_speech: "名詞",
+                  dictionary_reading: "ネコ"
+                },
                 assessment_choice_id: choice.id,
                 in_anki: "true",
                 surfaces: [ "猫" ]
@@ -83,11 +85,11 @@ RSpec.describe "Analyses", type: :request do
 
       analysis = Analysis.last
       assessment = analysis.word_assessments.sole
-      expect(response).to have_http_status(:ok)
-      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response).to redirect_to(new_analysis_path)
       expect(analysis.text).to eq("猫")
       expect(assessment.word).to eq(word)
       expect(assessment.assessment_choice).to eq(choice)
+      expect(assessment.assessed_at).to be_present
     end
 
     it "creates a word when no matching word exists" do
@@ -99,9 +101,11 @@ RSpec.describe "Analyses", type: :request do
             text: "犬",
             word_assessments_attributes: {
               "0" => {
-                lemma: "犬",
-                part_of_speech: "名詞",
-                dictionary_reading: "イヌ",
+                word_attributes: {
+                  lemma: "犬",
+                  part_of_speech: "名詞",
+                  dictionary_reading: "イヌ"
+                },
                 assessment_choice_id: choice.id,
                 surfaces: [ "犬" ]
               }
@@ -110,9 +114,36 @@ RSpec.describe "Analyses", type: :request do
         },
         headers: { "Accept" => Mime[:turbo_stream].to_s }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to redirect_to(new_analysis_path)
       expect(Word.find_by!(lemma: "犬", part_of_speech: "名詞").dictionary_reading).to eq("イヌ")
       expect(Analysis.last.words.pluck(:lemma)).to eq([ "犬" ])
+    end
+
+    it "re-renders the results with validation errors when saving fails" do
+      post save_analysis_path,
+        params: {
+          analysis: {
+            text: "猫",
+            word_assessments_attributes: {
+              "0" => {
+                word_attributes: {
+                  lemma: "猫",
+                  part_of_speech: "名詞",
+                  dictionary_reading: "ネコ"
+                },
+                assessment_choice_id: "999999",
+                surfaces: [ "猫" ]
+              }
+            }
+          }
+        },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('<turbo-stream action="update" target="analysis_results">')
+      expect(response.body).to include("Assessment choice")
+      expect(Analysis.count).to eq(0)
     end
   end
 end

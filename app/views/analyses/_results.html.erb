@@ -1,8 +1,19 @@
 <%= form_with url: save_analysis_path, scope: :analysis, method: :post do |form| %>
   <%= form.hidden_field :text, value: analysis.text %>
 
-  <% if local_assigns[:saved] %>
-    <p class="mb-3 text-success"><%= t("analyses.saved") %></p>
+  <% errors = analysis.errors.full_messages %>
+  <% analysis.word_assessments.each do |assessment| %>
+    <% errors.concat(assessment.errors.full_messages) %>
+    <% errors.concat(assessment.word&.errors&.full_messages || []) %>
+  <% end %>
+  <% if errors.any? %>
+    <div class="alert alert-error mb-3" role="alert">
+      <ul>
+        <% errors.uniq.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
   <% end %>
 
   <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
@@ -22,6 +33,7 @@
         <% analysis.word_assessments.each_with_index do |assessment, index| %>
           <% word = assessment.word %>
           <% field_name = "analysis[word_assessments_attributes][#{index}]" %>
+          <% word_field_name = "#{field_name}[word_attributes]" %>
 
           <tr class="hover:bg-base-200">
             <td lang="ja" class="text-lg font-medium">
@@ -31,9 +43,9 @@
                 <%= hidden_field_tag "#{field_name}[surfaces][]", surface %>
               <% end %>
             </td>
-            <td lang="ja"><%= word.lemma %></td>
-            <td lang="ja" class="text-base-content/70"><%= word.dictionary_reading %></td>
-            <td class="text-base-content/70"><%= word.part_of_speech %></td>
+            <td lang="ja"><%= word&.lemma %></td>
+            <td lang="ja" class="text-base-content/70"><%= word&.dictionary_reading %></td>
+            <td class="text-base-content/70"><%= word&.part_of_speech %></td>
             <td>
               <% case assessment.in_anki %>
               <% when true %>
@@ -46,9 +58,9 @@
               <%= hidden_field_tag "#{field_name}[in_anki]", assessment.in_anki %>
             </td>
             <td>
-              <%= hidden_field_tag "#{field_name}[lemma]", word.lemma %>
-              <%= hidden_field_tag "#{field_name}[part_of_speech]", word.part_of_speech %>
-              <%= hidden_field_tag "#{field_name}[dictionary_reading]", word.dictionary_reading %>
+              <%= hidden_field_tag "#{word_field_name}[lemma]", word&.lemma %>
+              <%= hidden_field_tag "#{word_field_name}[part_of_speech]", word&.part_of_speech %>
+              <%= hidden_field_tag "#{word_field_name}[dictionary_reading]", word&.dictionary_reading %>
               <%= select_tag "#{field_name}[assessment_choice_id]",
                     options_from_collection_for_select(assessment_choices, :id, :label, assessment.assessment_choice_id),
                     prompt: t("analyses.assessment_prompt"),

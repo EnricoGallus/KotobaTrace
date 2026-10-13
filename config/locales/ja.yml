@@ -15,7 +15,6 @@ ja:
     text_label: 解析するテキスト
     submit: 解析
     save: 保存
-    saved: 変更を保存しました。
     assessment_prompt: 評価を選択
     in_progress: 解析中…
     empty_results: 解析結果がここに表示されます。
