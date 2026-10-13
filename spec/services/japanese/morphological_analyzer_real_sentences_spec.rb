@@ -96,6 +96,13 @@ RSpec.describe Japanese::MorphologicalAnalyzer do
   end
 
   describe "known analyzer limitations" do
+    # Contextual corrections belong in a future VocabularyDisambiguator,
+    # leaving the raw analyzer and grouping rules independent of context.
+    it "currently reads 何時 as イツ even in a clock-time question" do
+      morphemes = described_class.call("何時までに受付を済ませる必要がありますか。")
+      expect(morphemes.find { |morpheme| morpheme.surface == "何時" }.reading).to eq("イツ")
+    end
+
     # Linguistically this should resolve to 降る.
     # NAIST-jdic currently resolves the ambiguous stem 降り to 降りる.
     # Keep this test as characterization of the analyzer, not desired behavior.

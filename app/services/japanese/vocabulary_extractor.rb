@@ -2,7 +2,9 @@ module Japanese
   class VocabularyExtractor
     RULES = [
       VocabularyRules::NameHonorific,
+      VocabularyRules::HonorificVerb,
       VocabularyRules::HonorificNoun,
+      VocabularyRules::TimeExpression,
       VocabularyRules::NumberCounter,
       VocabularyRules::SuruVerb,
       VocabularyRules::Verb,
@@ -36,15 +38,19 @@ module Japanese
     private
 
     def build_candidate(match)
-      readings = match.morphemes.map(&:reading)
       VocabularyCandidate.new(
         surface: match.morphemes.map(&:surface).join,
         base_form: match.base_form,
-        reading: readings.all? ? readings.join : nil,
+        reading: combined_reading(match.morphemes),
         part_of_speech: match.part_of_speech,
         kind: match.kind,
         morphemes: match.morphemes
       )
+    end
+
+    def combined_reading(morphemes)
+      readings = morphemes.map(&:reading)
+      readings.all? ? readings.join : nil
     end
   end
 end

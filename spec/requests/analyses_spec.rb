@@ -132,6 +132,7 @@ RSpec.describe "Analyses", type: :request do
                   dictionary_reading: "ネコ"
                 },
                 assessment_choice_id: "999999",
+                surface_readings: [ "", "ネコ" ],
                 surfaces: [ "猫" ]
               }
             }
@@ -143,6 +144,7 @@ RSpec.describe "Analyses", type: :request do
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
       expect(response.body).to include('<turbo-stream action="update" target="analysis_results">')
       expect(response.body).to include("Assessment choice")
+      expect(Nokogiri::HTML(response.body).css("tbody tr td")[2].text.strip).to eq("ネコ")
       expect(Analysis.count).to eq(0)
     end
   end

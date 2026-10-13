@@ -44,7 +44,14 @@
               <% end %>
             </td>
             <td lang="ja"><%= word&.lemma %></td>
-            <td lang="ja" class="text-base-content/70"><%= word&.dictionary_reading %></td>
+            <td lang="ja" class="text-base-content/70">
+              <% readings = (assessment.surface_readings || [ word&.dictionary_reading ]).reject(&:blank?) %>
+              <%= readings.join(", ") %>
+              <%= hidden_field_tag "#{field_name}[surface_readings][]", "" %>
+              <% readings.each do |reading| %>
+                <%= hidden_field_tag "#{field_name}[surface_readings][]", reading %>
+              <% end %>
+            </td>
             <td class="text-base-content/70"><%= word&.part_of_speech %></td>
             <td>
               <% case assessment.in_anki %>

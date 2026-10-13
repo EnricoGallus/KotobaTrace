@@ -13,5 +13,16 @@ RSpec.describe "Japanese vocabulary pipeline" do
       [ "持っていく", "持つ", :vocabulary ]
     )
     expect(morphemes.map(&:surface)).to include("は", "。")
+    expect(candidates.find { |candidate| candidate.surface == "記載された" }.reading).to eq("キサイサレタ")
+    expect(candidates.find { |candidate| candidate.surface == "持っていく" }.reading).to eq("モッテイク")
+  end
+
+  it "recognizes honorific requests and relative times in a real sentence" do
+    morphemes = Japanese::MorphologicalAnalyzer.call("開始十五分前までにお済ませください。二時間後。")
+    candidates = Japanese::VocabularyExtractor.call(morphemes)
+    request = candidates.find { |candidate| candidate.surface == "お済ませください" }
+    expect(request.base_form).to eq("済ませる")
+    expect(request.reading).to eq("オスマセクダサイ")
+    expect(candidates.select { |candidate| candidate.kind == :time_expression }.map(&:surface)).to eq(%w[十五分前 二時間後])
   end
 end

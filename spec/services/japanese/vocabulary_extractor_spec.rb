@@ -46,13 +46,15 @@ RSpec.describe Japanese::VocabularyExtractor do
 
   it "combines passive helpers and auxiliaries" do
     parts = [
-      morpheme("記載さ", base_form: "記載する", pos: "動詞"),
-      morpheme("れ", base_form: "れる", pos: "動詞"),
-      morpheme("た", pos: "助動詞")
+      morpheme("記載さ", base_form: "記載する", pos: "動詞", reading: "キサイサ"),
+      morpheme("れ", base_form: "れる", pos: "動詞", reading: "レ"),
+      morpheme("た", pos: "助動詞", reading: "タ")
     ]
     candidate = described_class.call(parts).fetch(0)
     expect(candidate.surface).to eq("記載された")
     expect(candidate.base_form).to eq("記載する")
+    expect(candidate.reading).to eq("キサイサレタ")
+    expect(candidate.morphemes).to eq(parts)
   end
 
   it "retains the existing split suru noun behavior including passive endings" do
@@ -103,5 +105,62 @@ RSpec.describe Japanese::VocabularyExtractor do
   it "returns no partial reading when any source reading is missing" do
     parts = [ morpheme("お", pos: "接頭詞"), morpheme("申し込み", reading: "モウシコミ") ]
     expect(described_class.call(parts).fetch(0).reading).to be_nil
+  end
+
+  it "reads every morpheme in 持っていく" do
+    parts = [
+      morpheme("持っ", base_form: "持つ", pos: "動詞", reading: "モッ"),
+      morpheme("て", pos: "助詞", subtype1: "接続助詞", reading: "テ"),
+      morpheme("いく", pos: "動詞", reading: "イク")
+    ]
+    candidate = described_class.call(parts).fetch(0)
+    expect(candidate.surface).to eq("持っていく")
+    expect(candidate.reading).to eq("モッテイク")
+    expect(candidate.morphemes).to eq(parts)
+  end
+
+  it "preserves the honorific prefix and full reading of a request" do
+    parts = [
+      morpheme("お", pos: "接頭詞", reading: "オ"),
+      morpheme("済ませ", base_form: "済ませる", pos: "動詞", reading: "スマセ"),
+      morpheme("ください", base_form: "くださる", pos: "動詞", reading: "クダサイ")
+    ]
+    candidate = described_class.call(parts).fetch(0)
+    expect(candidate.surface).to eq("お済ませください")
+    expect(candidate.base_form).to eq("済ませる")
+    expect(candidate.reading).to eq("オスマセクダサイ")
+    expect(candidate.morphemes).to eq(parts)
+  end
+
+  it "does not treat every prefixed verb as an honorific request" do
+    parts = [ morpheme("お", pos: "接頭詞"), morpheme("帰り", base_form: "帰る", pos: "動詞") ]
+    expect(Japanese::VocabularyRules::HonorificVerb.call(parts, 0)).to be_nil
+  end
+
+  [ %w[十 五 分 前], %w[二 時間 後], %w[二 時 間 後] ].each do |surfaces|
+    it "groups #{surfaces.join} before the number-counter rule" do
+      parts = surfaces.map do |surface|
+        morpheme(surface, subtype1: %w[十 五 二].include?(surface) ? "数" : nil)
+      end
+      candidates = described_class.call(parts + [ morpheme("受付") ])
+      expect(candidates.map(&:surface)).to eq([ surfaces.join, "受付" ])
+      expect(candidates.first.kind).to eq(:time_expression)
+      expect(candidates.first.morphemes).to eq(parts)
+    end
+  end
+
+  it "leaves 前 as vocabulary outside a numeric time expression" do
+    parts = [ morpheme("三", subtype1: "数"), morpheme("人"), morpheme("前") ]
+    expect(described_class.call(parts).map(&:surface)).to eq(%w[三人 前])
+    expect(described_class.call([ morpheme("前") ]).first.kind).to eq(:vocabulary)
+  end
+
+  it "preserves repeated occurrences with distinct source positions" do
+    first = morpheme("受付").with(position: 0)
+    second = morpheme("受付").with(position: 2)
+    parts = [ first, morpheme("と", pos: "助詞").with(position: 1), second ]
+    candidates = described_class.call(parts)
+    expect(candidates.map(&:surface)).to eq(%w[受付 受付])
+    expect(candidates.map { |candidate| candidate.morphemes.first.position }).to eq([ 0, 2 ])
   end
 end

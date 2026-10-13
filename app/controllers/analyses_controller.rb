@@ -39,6 +39,7 @@ class AnalysesController < ApplicationController
         :assessment_choice_id,
         :in_anki,
         { surfaces: [] },
+        { surface_readings: [] },
         { word_attributes: %i[lemma part_of_speech dictionary_reading] }
       ]
     )

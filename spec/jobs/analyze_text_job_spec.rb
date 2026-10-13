@@ -12,7 +12,7 @@ RSpec.describe AnalyzeTextJob, type: :job do
         morphemes: []
       )
       index = instance_double(Anki::VocabularyIndex)
-      existing_word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネコ")
+      existing_word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネ")
       broadcast_locals = nil
 
       morphemes = []
@@ -20,7 +20,8 @@ RSpec.describe AnalyzeTextJob, type: :job do
       allow(Japanese::VocabularyExtractor).to receive(:call).with(morphemes).and_return([
         candidate,
         candidate.with(surface: "田中様", base_form: "田中", kind: :name),
-        candidate.with(surface: "三十分", base_form: "三十分", kind: :number)
+        candidate.with(surface: "三十分", base_form: "三十分", kind: :number),
+        candidate.with(surface: "十五分前", base_form: "十五分前", kind: :time_expression)
       ])
       allow(Anki::VocabularyIndex).to receive(:new).and_return(index)
       allow(index).to receive(:scan).and_return(index)
@@ -42,6 +43,8 @@ RSpec.describe AnalyzeTextJob, type: :job do
       expect(analysis.word_assessments.size).to eq(1)
       expect(analysis.word_assessments.first.word).to eq(existing_word)
       expect(analysis.word_assessments.first.surfaces).to eq([ "猫" ])
+      expect(analysis.word_assessments.first.surface_readings).to eq([ "ネコ" ])
+      expect(existing_word.reload.dictionary_reading).to eq("ネ")
       expect(analysis.word_assessments.first.in_anki).to be(true)
     end
   end

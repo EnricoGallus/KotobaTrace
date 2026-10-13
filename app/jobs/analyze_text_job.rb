@@ -29,6 +29,7 @@ class AnalyzeTextJob < ApplicationJob
         )
         assessment = analysis.word_assessments.build(word: word)
         assessment.surfaces = word_candidates.map(&:surface).uniq
+        assessment.surface_readings = word_candidates.map(&:reading).compact.uniq
         assessment.in_anki = collection.include?(lemma)
       end
 
