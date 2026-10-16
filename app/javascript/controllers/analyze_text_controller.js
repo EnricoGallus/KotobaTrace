@@ -10,7 +10,8 @@ export default class extends Controller {
       return
     }
 
-    this.requestIdTarget.value = crypto.randomUUID()
+    // getRandomValues also works for local HTTP development origins.
+    this.requestIdTarget.value = crypto.getRandomValues(new Uint32Array(4)).join("-")
     this.resultsTarget.replaceChildren()
   }
 

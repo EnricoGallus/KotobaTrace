@@ -2,7 +2,7 @@ require "set"
 
 module Anki
   class VocabularyIndex
-    attr_reader :expressions
+    attr_reader :expressions, :notes_by_expression
 
     def initialize(client: AnkiConnect::Client.new(
         endpoint: ENV.fetch(
@@ -16,11 +16,13 @@ module Anki
     )
       @client = client
       @expressions = Set.new
+      @notes_by_expression = {}
       @scanned = false
     end
 
     def scan(decks:, expression_field:)
       @expressions.clear
+      @notes_by_expression.clear
 
       decks.each do |deck|
         notes = @client.notes(query: %(deck:"#{deck}"))
@@ -33,6 +35,7 @@ module Anki
           next if expression.empty?
 
           @expressions << expression
+          (@notes_by_expression[expression] ||= []) << note
         end
       end
 

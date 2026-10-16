@@ -37,6 +37,7 @@
     </button>
   </div>
 
+  <% passage_counts = saved_passage_counts(analysis) %>
   <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
     <table class="table">
       <thead>
@@ -47,6 +48,7 @@
           <th><%= t("analyses.columns.part_of_speech") %></th>
           <th><%= t("analyses.columns.flashcards") %></th>
           <th><%= t("analyses.columns.assessment") %></th>
+          <th title="<%= t("word_history.saved_only") %>"><%= t("analyses.columns.passages") %></th>
         </tr>
       </thead>
 
@@ -64,7 +66,13 @@
                 <%= hidden_field_tag "#{field_name}[surfaces][]", surface %>
               <% end %>
             </td>
-            <td lang="ja"><%= word&.lemma %></td>
+            <td lang="ja">
+              <button type="button" class="link link-primary" aria-haspopup="dialog"
+                      data-action="word-history#open"
+                      data-word-history-url="<%= word_history_path(lemma: word&.lemma, part_of_speech: word&.part_of_speech) %>">
+                <%= word&.lemma %>
+              </button>
+            </td>
             <td lang="ja" class="text-base-content/70">
               <% readings = (assessment.surface_readings || [ word&.dictionary_reading ]).reject(&:blank?) %>
               <%= readings.join(", ") %>
@@ -95,6 +103,7 @@
                     class: "select select-bordered select-sm",
                     data: { analyze_text_target: "assessment" } %>
             </td>
+            <td class="tabular-nums" data-passage-count><%= passage_counts.fetch(word&.id, 0) %></td>
           </tr>
         <% end %>
       </tbody>

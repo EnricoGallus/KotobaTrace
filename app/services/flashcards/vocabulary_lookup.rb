@@ -15,7 +15,7 @@ module Flashcards
       return VocabularyCollection.new if deck.blank? || expression_field.blank?
 
       index = Anki::VocabularyIndex.new.scan(decks: [ deck ], expression_field: expression_field)
-      VocabularyCollection.new(index.expressions, checked: true)
+      VocabularyCollection.new(index.expressions, checked: true, notes: index.notes_by_expression, provider: provider)
     rescue StandardError => error
       # Optional enrichment must never prevent analysis or saving.
       Rails.logger.warn("Flashcard vocabulary lookup failed (#{error.class}); continuing without enrichment")

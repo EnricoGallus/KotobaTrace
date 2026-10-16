@@ -6,3 +6,6 @@ import { application } from "./application"
 
 import AnalyzeTextController from "./analyze_text_controller"
 application.register("analyze-text", AnalyzeTextController)
+
+import WordHistoryController from "./word_history_controller"
+application.register("word-history", WordHistoryController)

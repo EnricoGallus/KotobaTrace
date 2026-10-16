@@ -23,6 +23,9 @@ RSpec.describe Flashcards::VocabularyLookup do
     expect(collection).to include("猫")
     expect(collection).not_to include("犬")
     expect(collection).to be_checked
+    expect(collection.provider).to eq("anki")
+    expect(collection.notes_for("猫")).to contain_exactly({ "fields" => { "Expression" => { "value" => " 猫 " } } })
+    expect(collection.notes_for("犬")).to be_empty
   end
 
   it "distinguishes a successful empty lookup from an unavailable provider" do

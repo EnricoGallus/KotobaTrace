@@ -17,5 +17,7 @@ Rails.application.routes.draw do
     post :save
   end
 
+  resource :word_history, only: :show
+
   root "analyses#new"
 end

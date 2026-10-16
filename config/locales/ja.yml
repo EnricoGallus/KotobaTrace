@@ -33,8 +33,30 @@ ja:
       reading: 文中の読み
       part_of_speech: 品詞
       flashcards: 単語カード
+      passages: 過去の文章数
       assessment: 評価
     flashcard_status:
       included: 単語カードに登録済み
       not_included: 単語カードに未登録
       not_checked: 未確認
+  word_history:
+    title: 単語の履歴
+    close: 閉じる
+    loading: 単語の履歴を読み込み中…
+    load_failed: 履歴を読み込めませんでした。解析結果と選択した評価はそのまま残っています。
+    retry: もう一度試す
+    saved_only: 保存済みの文章のみを集計しています。現在の未保存の解析結果は含まれません。
+    passages: 出会った文章数
+    first_encounter: 初めて出会った日時
+    last_encounter: 最後に出会った日時
+    never: まだ履歴がありません
+    choice_summary: 評価の集計
+    no_history: この単語の保存済みの履歴はまだありません。
+    unassessed: 未評価
+    timeline: 評価の履歴
+    saved_at: 文章の保存日時
+    passage: 文章
+    view_passage: 文章を見る
+    flashcards_not_configured: 単語カードの連携が無効または未設定のため、登録状況は未確認です。
+    note: ノート
+    tags: タグ

@@ -193,26 +193,21 @@ Examples of future grammar/expression candidates:
 
 Vocabulary and grammar are separate learning concepts and should remain separate in the data model.
 
-## Occurrences versus vocabulary
+## Passage encounters versus repetitions
 
-Do not discard duplicate occurrences too early.
+Keep raw morphemes and vocabulary candidates separate through extraction, then
+show one grouped row per normalized word and part of speech.
 
-If a word appears three times in one text, KotobaTrace should preserve all three occurrences internally.
+Personal history counts one encounter per word per saved passage. If a word
+appears three times in one passage, save one word/analysis link and one learner
+assessment, not three encounters or independent recognition failures. Do not
+persist within-passage repetition counts or individual occurrence records for
+this workflow.
 
-For example:
-
-    受付 occurrence 1
-    受付 occurrence 2
-    受付 occurrence 3
-
-The UI may aggregate them into:
-
-    受付
-    occurrences in this text: 3
-
-but the original positions and contexts should remain available.
-
-This is important for future encounter history and contextual examples.
+Use saved analysis/word links to calculate passage counts, first/last encounters,
+and assessment totals. Retain the original passage for later review. Unsaved
+analyses do not contribute to history. A word-history dialog keeps the learner's
+current analysis and selections in place.
 
 ## Machine suggestions are not absolute truth
 
@@ -309,8 +304,8 @@ The most important persistent data belongs to KotobaTrace itself, not Anki or th
 Examples:
 
 - encountered vocabulary
-- occurrence contexts
-- encounter count
+- original saved passages
+- saved passage encounter count
 - known count
 - unknown count
 - ignore status

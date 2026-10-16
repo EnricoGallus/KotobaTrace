@@ -87,6 +87,59 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(Analysis.last.word_assessments.where(assessment_choice: unknown).count).to eq(1)
   end
 
+  it "counts each saved passage once and opens history without losing draft selections" do
+    known = AssessmentChoice.create!(key: "known", position: 4)
+    unknown = AssessmentChoice.create!(key: "unknown", position: 1)
+    word = Word.create!(lemma: "猫", part_of_speech: "名詞")
+    [ [ "猫。猫。猫。", unknown ], [ "猫がいた。", known ] ].each do |text, choice|
+      Analysis.create!(text: text).word_assessments.create!(word: word, assessment_choice: choice)
+    end
+    open_analysis
+    submit_text("猫。猫。猫。犬。")
+    perform_enqueued_jobs
+    expect(page).to have_css("#analysis_results tbody tr", count: 2)
+    cat_row = find("#analysis_results tbody tr", text: "猫")
+    expect(cat_row.find("[data-passage-count]").text).to eq("2")
+    cat_row.find("select").select(unknown.label)
+    original_url = page.current_url
+    cat_row.click_button "猫"
+
+    within("dialog[open]") do
+      expect(page).to have_css("[data-history-passage-count]", text: "2")
+      expect(page).to have_text("First encounter")
+      expect(page).to have_text("Last encounter")
+      expect(page).to have_text("Don't know yet: 1")
+      expect(page).to have_text("Know both: 1")
+      expect(page).to have_text("Flashcard lookup is unavailable")
+      expect(page).to have_css("tbody tr", count: 2)
+      click_button "Close"
+    end
+    expect(page.current_url).to eq(original_url)
+    expect(cat_row.find("select").value).to eq(unknown.id.to_s)
+    expect(page).to have_field("text", with: "猫。猫。猫。犬。")
+    expect(Analysis.count).to eq(2)
+
+    find("#analysis_results tbody tr", text: "犬").click_button "犬"
+    within("dialog[open]") do
+      expect(page).to have_text("This word has no saved history yet")
+      page.driver.browser.action.send_keys(:escape).perform
+    end
+    expect(page).to have_no_css("dialog[open]")
+    expect(cat_row.find("select").value).to eq(unknown.id.to_s)
+
+    click_button "Save"
+    expect(page).to have_text("Your analysis results will appear here")
+    expect(word.reload.analyses.count).to eq(3)
+    submit_text("猫")
+    perform_enqueued_jobs
+    expect(find("#analysis_results tbody tr [data-passage-count]").text).to eq("3")
+    click_button "猫"
+    within("dialog[open]") do
+      expect(page).to have_css("[data-history-passage-count]", text: "3")
+      expect(page).to have_text("Don't know yet: 2")
+    end
+  end
+
   it "recovers from job failure using the same text and ignores stale results" do
     open_analysis
     submit_text("猫")
@@ -100,6 +153,7 @@ RSpec.describe "Analysis workflow", type: :system do
     allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_call_original
     click_button "Retry analysis"
     expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
+    expect(page.find('input[name="request_id"]', visible: :all).value).not_to eq(failed_request_id)
     expect(page).to have_css('form[aria-busy="true"] input[type="submit"]:not([disabled])')
 
     Turbo::StreamsChannel.broadcast_update_to(

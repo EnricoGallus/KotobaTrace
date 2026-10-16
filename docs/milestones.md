@@ -31,6 +31,11 @@ Implemented foundations:
   One provider is selected via environment configuration.
 - Explicit saving of `Analysis`, reusable `Word` records, and `WordAssessment`
   records linked to configurable `AssessmentChoice` records.
+- One encounter per word per saved passage, including prior saved data; repeated
+  appearances within a passage do not increment history.
+- A prior-passage count in results and an in-place word-history dialog with dates,
+  assessment totals, all saved assessments/passages, and optional flashcard note
+  details. Opening the dialog preserves unsaved analysis and selections.
 - Seeded choices: Ignore, Unknown, Reading only, Meaning only, and Known.
 - Service, model, job, request, and view specs; GitHub Actions checks.
 
@@ -41,10 +46,10 @@ Important gaps:
   no longer prevents analysis or saving.
 - Extracted occurrences remain separate until the job groups them. Saved data
   has one assessment per word per analysis, without individual occurrence
-  positions or contexts. Displayed surfaces/readings and Anki membership on an
-  assessment are transient rather than persisted occurrence history.
-- Prior-history screens, encounter counts, a Study Inbox, dictionary meanings,
-  learner corrections, grammar tracking, and accounts are not implemented.
+  positions or within-passage counts, by design. The original passage is saved;
+  displayed surfaces/readings and flashcard membership remain transient.
+- A Study Inbox, dictionary meanings, learner corrections, grammar tracking, and
+  accounts are not implemented. Current history belongs to the single-user app.
 
 ## Analysis boundary for all milestones
 
@@ -93,32 +98,37 @@ recorded as limitations rather than patched with learner-specific analyzer rules
 
 ## Milestone 2 — Preserve Encounters and Show Personal History
 
-**Status: partially implemented; analysis and assessment persistence exist.**
+**Status: passage encounter history and the word dialog are implemented; learner corrections and ranking semantics remain.**
+
+### Implemented behavior
+
+- Build on `Analysis`, `Word`, `WordAssessment`, and `AssessmentChoice`.
+- Preserve one word/analysis link and at most one assessment per word per saved
+  passage. Count passages, not repetitions inside a passage; no occurrence table
+  or repetition counter is required for this workflow.
+- Show prior saved passage counts in results. The dialog shows first/last saved
+  encounters, per-choice totals, unassessed passages, and the full assessment
+  timeline with original passages available on demand.
+- Load history in a Turbo Frame inside a native dialog, without navigation or
+  changes to current selections. Unsaved analyses are excluded from all counts.
+- Include optional live flashcard membership and matching note details. Failure
+  or disabled configuration does not prevent access to personal history.
 
 ### Remaining work
 
-- Build on `Analysis`, `Word`, `WordAssessment`, and `AssessmentChoice` rather than
-  replacing them with the old proposed study-text/dictionary-entry model.
-- Add occurrence persistence when implementing history: retain each candidate's
-  surface, source location, and context, including repeated appearances of the
-  same word in one analysis. Current morpheme positions are sequence indices;
-  define source offsets separately if needed for exact highlighting.
-- Keep the grouped assessment UI while preserving individual occurrences behind
-  it. One assessment of a word in a passage is not three independent recognition
-  failures just because that word appears three times.
-- Show prior analyses/contexts, occurrence counts, assessment counts, and
-  first/last-seen information. Distinguish occurrences from assessed sessions.
-- Let learners correct mistaken base forms or classifications, preserving the
-  source information needed to understand the correction.
-- Define how the nuanced assessment choices contribute to difficulty summaries;
-  do not silently treat “reading only” and “meaning only” as equivalent to Known.
+- Let learners correct mistaken base forms or classifications while preserving
+  enough source information to understand a correction.
+- Define how nuanced assessment choices contribute to difficulty ranking; keep
+  Reading only and Meaning only separate from Known.
+- Validate the history dialog during actual study before adding richer detail.
 
 ### Acceptance criteria
 
-After saving two passages containing the same word, its history shows both
-passages and their assessments. If it appears three times in one passage, all
-three contexts remain available while the UI can show one grouped row.
-Repeated difficulty is visible without requiring Anki or dictionary data.
+After saving two passages containing the same word, its history shows two saved
+passages and their respective assessments. Repeating the word three times in one
+passage still adds one encounter. Opening and closing history preserves the
+current unsaved selections. These behaviors are covered by browser/model/request
+specs, including a reload and a later third saved passage.
 
 ## Milestone 3 — Study Inbox and Candidate Export
 
@@ -274,6 +284,6 @@ workflow without developer assistance, with tested data ownership and recovery.
 
 ## Recommended Next Action
 
-Complete Milestone 1's remaining real-material validation and reading correctness, then extend the existing saved assessments into durable
-occurrence history in Milestone 2. Continue refining extraction from real examples
+Complete Milestone 1's remaining real-material validation and reading correctness,
+then validate the passage-history workflow and define Milestone 3's inbox ranking. Continue refining extraction from real examples
 without moving learner-oriented rules into `MorphologicalAnalyzer`.

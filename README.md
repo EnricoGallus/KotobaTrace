@@ -23,8 +23,12 @@ keep the original text with a retry action, and empty results explain what to tr
 A flashcard lookup failure shows an informational notice without blocking saving.
 Results group vocabulary by normalized form and part of speech.
 
-Personal-history screens, persisted individual occurrences, a Study Inbox,
-dictionary meanings, grammar tracking, and user accounts are planned. Current
+Results show how many saved passages contained each word. Click its base form
+for a dialog with first/last encounter dates, assessment totals, every saved
+assessment and passage, and available flashcard note details. The current draft
+is excluded from history. Repetitions within one passage count once.
+
+A Study Inbox, dictionary meanings, grammar tracking, and user accounts are planned. Current
 results include analyzer-derived readings, which can reflect encountered forms
 rather than dictionary forms. Automatic Japanese analysis can make mistakes.
 
@@ -126,7 +130,11 @@ reachable from the container; Linux Docker setups may need host-gateway mapping
 and appropriate AnkiConnect network configuration. Anki being closed or
 unreachable returns unenriched results with “not checked” membership. Successful
 lookups distinguish found from absent expressions. Connection, read, and write
-timeouts are bounded to 2, 5, and 5 seconds respectively per request.
+timeouts are bounded to 2, 5, and 5 seconds respectively per request. Opening a
+word-history dialog performs a fresh lookup and can show matching note IDs,
+fields, note types, and tags. Remote field markup is displayed as plain text.
+Disabled lookup, inaccessible providers, and checked-but-absent words remain
+distinct. Card scheduling and review-history details are not fetched yet.
 
 ## Tests and Checks
 
@@ -175,7 +183,8 @@ grouped results + Anki lookup → learner assessments → explicit save
 handle learner-oriented grouping, normalization, and filtering. Candidates retain
 their source morphemes, including separate repeated occurrences through extraction.
 The current save flow persists one assessment per word per analysis; individual
-source occurrences and their contexts still need persistence.
+repetitions are not counted or stored separately. The saved word/analysis links
+provide passage encounter counts and the full original passages for history.
 
 Future grammar extraction will branch directly from raw morphemes, since it needs
 particles and auxiliaries that vocabulary extraction can group or omit.
@@ -188,4 +197,4 @@ particles and auxiliaries that vocabulary extraction can group or omit.
   work, acceptance criteria, and later possibilities.
 
 The immediate focus is real-material extraction review and reading correctness,
-followed by encounter history and a useful Study Inbox. Larger features follow real study feedback.
+followed by a useful Study Inbox. Larger features follow real study feedback.

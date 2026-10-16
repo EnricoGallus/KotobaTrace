@@ -33,8 +33,30 @@ en:
       reading: Encountered reading
       part_of_speech: Part of speech
       flashcards: Flashcards
+      passages: Prior passages
       assessment: Assessment
     flashcard_status:
       included: In flashcards
       not_included: Not in flashcards
       not_checked: Not checked
+  word_history:
+    title: Word history
+    close: Close
+    loading: Loading word history…
+    load_failed: Could not load word history. Your analysis and selections are still here.
+    retry: Try again
+    saved_only: Only saved passages are counted. The current unsaved analysis is excluded.
+    passages: Passages encountered
+    first_encounter: First encounter
+    last_encounter: Last encounter
+    never: Not encountered yet
+    choice_summary: Assessment totals
+    no_history: This word has no saved history yet.
+    unassessed: Unassessed
+    timeline: Assessment history
+    saved_at: Passage saved
+    passage: Passage
+    view_passage: View passage
+    flashcards_not_configured: Flashcard lookup is disabled or not configured; membership has not been checked.
+    note: Note
+    tags: Tags
