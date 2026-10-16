@@ -23,9 +23,9 @@ en:
       base_form: Base form
       reading: Reading
       part_of_speech: Part of speech
-      anki: Anki
+      flashcards: Flashcards
       assessment: Assessment
-    anki_status:
-      included: In Anki
-      not_included: Not in Anki
+    flashcard_status:
+      included: In flashcards
+      not_included: Not in flashcards
       not_checked: Not checked

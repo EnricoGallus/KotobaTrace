@@ -24,7 +24,7 @@
           <th><%= t("analyses.columns.base_form") %></th>
           <th><%= t("analyses.columns.reading") %></th>
           <th><%= t("analyses.columns.part_of_speech") %></th>
-          <th><%= t("analyses.columns.anki") %></th>
+          <th><%= t("analyses.columns.flashcards") %></th>
           <th><%= t("analyses.columns.assessment") %></th>
         </tr>
       </thead>
@@ -54,15 +54,15 @@
             </td>
             <td class="text-base-content/70"><%= word&.part_of_speech %></td>
             <td>
-              <% case assessment.in_anki %>
+              <% case assessment.in_flashcards %>
               <% when true %>
-                <span class="badge badge-success badge-sm" title="<%= t("analyses.anki_status.included") %>">✓</span>
+                <span class="badge badge-success badge-sm" title="<%= t("analyses.flashcard_status.included") %>">✓</span>
               <% when false %>
-                <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.anki_status.not_included") %>">✗</span>
+                <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.flashcard_status.not_included") %>">✗</span>
               <% else %>
-                <span class="text-base-content/40" title="<%= t("analyses.anki_status.not_checked") %>">—</span>
+                <span class="text-base-content/40" title="<%= t("analyses.flashcard_status.not_checked") %>">—</span>
               <% end %>
-              <%= hidden_field_tag "#{field_name}[in_anki]", assessment.in_anki %>
+              <%= hidden_field_tag "#{field_name}[in_flashcards]", assessment.in_flashcards %>
             </td>
             <td>
               <%= hidden_field_tag "#{word_field_name}[lemma]", word&.lemma %>

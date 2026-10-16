@@ -23,9 +23,9 @@ ja:
       base_form: 基本形
       reading: 読み
       part_of_speech: 品詞
-      anki: Anki
+      flashcards: 単語カード
       assessment: 評価
-    anki_status:
-      included: Ankiに登録済み
-      not_included: Ankiに未登録
+    flashcard_status:
+      included: 単語カードに登録済み
+      not_included: 単語カードに未登録
       not_checked: 未確認

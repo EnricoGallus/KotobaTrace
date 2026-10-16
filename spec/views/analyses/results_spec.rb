@@ -26,4 +26,20 @@ RSpec.describe "analyses/_results", type: :view do
 
     expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
   end
+
+  { true => "In flashcards", false => "Not in flashcards", nil => "Not checked" }.each do |membership, label|
+    it "displays #{label.inspect} for membership #{membership.inspect}" do
+      analysis = Analysis.new(text: "猫")
+      analysis.word_assessments.build(
+        word: Word.new(lemma: "猫", part_of_speech: "名詞"),
+        in_flashcards: membership
+      )
+
+      render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
+
+      document = Nokogiri::HTML(rendered)
+      expect(document.css("tbody tr td")[4].at_css("[title]")["title"]).to eq(label)
+      expect(document.at_css('input[name="analysis[word_assessments_attributes][0][in_flashcards]"]')).to be_present
+    end
+  end
 end

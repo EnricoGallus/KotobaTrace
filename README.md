@@ -25,10 +25,10 @@ dictionary meanings, grammar tracking, and user accounts are planned. Current
 results include analyzer-derived readings, which can reflect encountered forms
 rather than dictionary forms. Automatic Japanese analysis can make mistakes.
 
-Anki is intended to be optional. **The current analysis job still requires a
-reachable AnkiConnect instance** and uses a hard-coded deck and field. Removing
-that dependency is an immediate roadmap item. Anki membership means an expression
-was found in the scanned deck; it does not mean the learner knows the word.
+Flashcard enrichment is optional and uses one provider at a time. Anki is the
+current provider; unavailable connections return an empty, unchecked collection
+without preventing analysis or saving. Membership means an expression was found
+in the configured deck; it does not mean the learner knows the word.
 
 ## Stack
 
@@ -93,6 +93,9 @@ database. Without `--skip-server`, setup starts the development processes itself
 | `POSTGRES_USER` | Development/test database role | `postgres` |
 | `DATABASE_PASSWORD` | Development/test database password | `password` |
 | `DATABASE_URL` | Alternative Rails database connection URL | Unset |
+| `FLASHCARD_PROVIDER` | Active flashcard provider (`anki` or `none`) | `anki` |
+| `ANKI_DECK` | Anki deck scanned for vocabulary (blank disables lookup) | `2026 JLPT N2::新完全マスターN2 - 語彙` |
+| `ANKI_EXPRESSION_FIELD` | Note field containing vocabulary expressions | `Expression` |
 | `ANKI_CONNECT_URL` | AnkiConnect endpoint reachable from Rails | `http://127.0.0.1:8765` |
 | `MECAB_PATH` | Explicit path to the MeCab shared library, if Natto cannot discover it | Unset |
 
@@ -102,22 +105,25 @@ current `Procfile.dev` does not start a separate Solid Queue worker.
 
 ### AnkiConnect
 
-Run Anki Desktop with AnkiConnect enabled. The analysis job currently scans:
+For optional Anki enrichment, run Anki Desktop with AnkiConnect enabled.
+`Flashcards::VocabularyLookup` scans these defaults:
 
 - Deck: `2026 JLPT N2::新完全マスターN2 - 語彙`
 - Expression field: `Expression`
 
-Adapt these values in
-[AnalyzeTextJob](app/jobs/analyze_text_job.rb) to match your collection until
-configurable deck/field selection is implemented. Matching currently checks exact
-normalized expressions against trimmed field values.
+Set `ANKI_DECK` and `ANKI_EXPRESSION_FIELD` to match your collection, or set
+`FLASHCARD_PROVIDER=none` to skip flashcard lookup. Matching checks exact
+normalized expressions against trimmed field values. The job calls the
+provider-neutral `Flashcards::VocabularyLookup` service and uses `in_flashcards`
+for transient membership.
 
 The dev container sets `ANKI_CONNECT_URL` to
 `http://host.docker.internal:8765`. Ensure that address resolves and AnkiConnect is
 reachable from the container; Linux Docker setups may need host-gateway mapping
 and appropriate AnkiConnect network configuration. Anki being closed or
-unreachable currently causes analysis to fail rather than returning unenriched
-results.
+unreachable returns unenriched results with “not checked” membership. Successful
+lookups distinguish found from absent expressions. Connection, read, and write
+timeouts are bounded to 2, 5, and 5 seconds respectively per request.
 
 ## Tests and Checks
 
@@ -174,5 +180,5 @@ particles and auxiliaries that vocabulary extraction can group or omit.
 - [Development milestones](docs/milestones.md): implemented foundations, remaining
   work, acceptance criteria, and later possibilities.
 
-The immediate focus is reliable analysis with optional Anki, followed by encounter
+The immediate focus is visible, recoverable analysis failures, followed by encounter
 history and a useful Study Inbox. Larger features follow real study feedback.

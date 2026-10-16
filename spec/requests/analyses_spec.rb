@@ -75,7 +75,7 @@ RSpec.describe "Analyses", type: :request do
                   dictionary_reading: "ネコ"
                 },
                 assessment_choice_id: choice.id,
-                in_anki: "true",
+                in_flashcards: "true",
                 surfaces: [ "猫" ]
               }
             }

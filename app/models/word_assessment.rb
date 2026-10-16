@@ -3,7 +3,7 @@ class WordAssessment < ApplicationRecord
   belongs_to :word, inverse_of: :word_assessments
   belongs_to :assessment_choice, optional: true
 
-  attribute :in_anki, :boolean
+  attribute :in_flashcards, :boolean
   attr_accessor :surfaces, :surface_readings
 
   accepts_nested_attributes_for :word

@@ -2,11 +2,16 @@ require "set"
 
 module Anki
   class VocabularyIndex
+    attr_reader :expressions
+
     def initialize(client: AnkiConnect::Client.new(
         endpoint: ENV.fetch(
           "ANKI_CONNECT_URL",
           "http://127.0.0.1:8765"
-        )
+        ),
+        open_timeout: 2,
+        read_timeout: 5,
+        write_timeout: 5
       )
     )
       @client = client

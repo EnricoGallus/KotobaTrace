@@ -9,12 +9,7 @@ class AnalyzeTextJob < ApplicationJob
       candidates = Japanese::VocabularyExtractor.call(morphemes)
         .select { |candidate| candidate.kind == :vocabulary }
 
-      collection = Anki::VocabularyIndex.new
-
-      collection.scan(
-        decks: [ "2026 JLPT N2::新完全マスターN2 - 語彙" ],
-        expression_field: "Expression"
-      )
+      collection = Flashcards::VocabularyLookup.call
 
       analysis = Analysis.new(text: text)
       candidate_groups = candidates.group_by { |candidate| [ candidate.base_form, candidate.part_of_speech ] }
@@ -30,7 +25,7 @@ class AnalyzeTextJob < ApplicationJob
         assessment = analysis.word_assessments.build(word: word)
         assessment.surfaces = word_candidates.map(&:surface).uniq
         assessment.surface_readings = word_candidates.map(&:reading).compact.uniq
-        assessment.in_anki = collection.include?(lemma)
+        assessment.in_flashcards = collection.include?(lemma) if collection.checked?
       end
 
       Turbo::StreamsChannel.broadcast_update_to(

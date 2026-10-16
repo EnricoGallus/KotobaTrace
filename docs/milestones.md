@@ -26,7 +26,9 @@ Implemented foundations:
   currently displays only candidates whose kind is `:vocabulary`.
 - Results grouped by base form and part of speech, displaying encountered forms,
   readings, and Anki membership.
-- Local AnkiConnect membership lookup through `Anki::VocabularyIndex`.
+- Optional, provider-neutral flashcard lookup through `Flashcards::VocabularyLookup`,
+  using `Anki::VocabularyIndex` for Anki and an empty, unchecked collection on failure.
+  One provider is selected via environment configuration.
 - Explicit saving of `Analysis`, reusable `Word` records, and `WordAssessment`
   records linked to configurable `AssessmentChoice` records.
 - Seeded choices: Ignore, Unknown, Reading only, Meaning only, and Known.
@@ -34,9 +36,9 @@ Implemented foundations:
 
 Important gaps:
 
-- The analysis job currently scans a hard-coded Anki deck and field on every run.
-  It has no fallback when AnkiConnect is unavailable. Optional Anki is a product
-  requirement, not yet the behavior of this workflow.
+- Flashcard lookup scans the configured Anki deck on each analysis; settings UI,
+  snapshots, and other flashcard providers are not implemented. Failed enrichment
+  no longer prevents analysis or saving.
 - Extracted occurrences remain separate until the job groups them. Saved data
   has one assessment per word per analysis, without individual occurrence
   positions or contexts. Displayed surfaces/readings and Anki membership on an
@@ -71,9 +73,9 @@ analyzer. Grammar extraction must consume raw morphemes directly.
   regression examples for useful rule improvements.
 - Keep specific extraction rules ahead of generic fallback rules; preserve raw
   metadata and duplicate occurrences through extraction.
-- Make Anki enrichment optional. An unavailable or unconfigured Anki connection
-  must still allow analysis and saving, showing “not checked” rather than “not
-  in Anki.” Move deck/field selection out of the job's hard-coded configuration.
+- Confirm optional flashcard enrichment during actual study with Anki open and
+  closed. The service fallback, “not checked” state, and environment-based
+  provider/deck/field configuration are implemented and covered by specs.
 - Handle empty input and analysis failures with useful UI feedback and a retry
   path, so the screen does not remain indefinitely in progress.
 - Clarify encountered-form readings versus dictionary-form readings. A reading
@@ -270,7 +272,7 @@ workflow without developer assistance, with tested data ownership and recovery.
 
 ## Recommended Next Action
 
-Complete Milestone 1's remaining reliability work, especially optional Anki and
-visible job failures, then extend the existing saved assessments into durable
+Complete Milestone 1's remaining reliability work, especially visible job failures
+and reading correctness, then extend the existing saved assessments into durable
 occurrence history in Milestone 2. Continue refining extraction from real examples
 without moving learner-oriented rules into `MorphologicalAnalyzer`.
