@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "rails": {
-      "command": "rails-mcp-server"
+      "command": "rails-mcp-server",
+      "args": ["--single-project"]
     },
     "context7": {
       "command": "npx",
@@ -19,6 +20,21 @@
       "env": {
         "DATABASE_URI": "postgresql://postgres:password@db:5432/kotoba_trace_development"
       }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/enrico/Projects/kotoba_trace"
+      ]
     }
   }
 }
