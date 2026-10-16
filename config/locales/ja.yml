@@ -22,13 +22,15 @@ ja:
       failed: 解析を完了できませんでした。入力したテキストは残っています。もう一度お試しください。
       request_failed: 解析の開始または応答の受信に失敗しました。接続を確認して、もう一度お試しください。
     save: 保存
+    bulk_assessment_label: 未評価の単語をまとめて評価
+    apply_assessment: 適用
     assessment_prompt: 評価を選択
     in_progress: 解析中…
     empty_results: 解析結果がここに表示されます。
     columns:
-      surface: 表記
+      surface: 文中の表記
       base_form: 基本形
-      reading: 読み
+      reading: 文中の読み
       part_of_speech: 品詞
       flashcards: 単語カード
       assessment: 評価

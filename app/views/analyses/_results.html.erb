@@ -23,6 +23,20 @@
     </div>
   <% end %>
 
+  <div class="mb-4 flex flex-wrap items-end gap-3">
+    <div>
+      <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
+      <%= select_tag :bulk_assessment,
+            options_from_collection_for_select(assessment_choices, :id, :label),
+            prompt: t("analyses.assessment_prompt"),
+            class: "select select-bordered select-sm",
+            data: { analyze_text_target: "bulkAssessment" } %>
+    </div>
+    <button type="button" class="btn btn-sm" data-action="analyze-text#applyAssessmentToUnselected">
+      <%= t("analyses.apply_assessment") %>
+    </button>
+  </div>
+
   <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
     <table class="table">
       <thead>
@@ -78,7 +92,8 @@
               <%= select_tag "#{field_name}[assessment_choice_id]",
                     options_from_collection_for_select(assessment_choices, :id, :label, assessment.assessment_choice_id),
                     prompt: t("analyses.assessment_prompt"),
-                    class: "select select-bordered select-sm" %>
+                    class: "select select-bordered select-sm",
+                    data: { analyze_text_target: "assessment" } %>
             </td>
           </tr>
         <% end %>

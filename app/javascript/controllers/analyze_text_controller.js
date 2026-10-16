@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "completion"]
+  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "completion", "bulkAssessment", "assessment"]
   static values = { progressLabel: String }
 
   prepare(event) {
@@ -69,6 +69,15 @@ export default class extends Controller {
     this.formTarget.setAttribute("aria-busy", "false")
     this.progressTarget.hidden = true
     if (this.submitLabel) this.submitTarget.value = this.submitLabel
+  }
+
+  applyAssessmentToUnselected() {
+    const value = this.bulkAssessmentTarget.value
+    if (!value) return
+
+    this.assessmentTargets.forEach((select) => {
+      if (!select.value) select.value = value
+    })
   }
 
   retry() {

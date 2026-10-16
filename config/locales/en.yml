@@ -22,13 +22,15 @@ en:
       failed: Analysis could not be completed. Your text is still here; please try again.
       request_failed: Could not start analysis or receive its response. Check your connection and try again.
     save: Save
+    bulk_assessment_label: Set unassessed words to
+    apply_assessment: Apply
     assessment_prompt: Choose an assessment
     in_progress: "Analysis in progress…"
     empty_results: Your analysis results will appear here.
     columns:
-      surface: Surface
+      surface: Encountered form
       base_form: Base form
-      reading: Reading
+      reading: Encountered reading
       part_of_speech: Part of speech
       flashcards: Flashcards
       assessment: Assessment

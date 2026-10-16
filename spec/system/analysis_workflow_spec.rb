@@ -34,6 +34,9 @@ RSpec.describe "Analysis workflow", type: :system do
     click_button label
     expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
     expect(page).to have_css('[data-analyze-text-target="progress"]', visible: true)
+    # Turbo releases the submit button after the enqueue response, while our
+    # fieldset stays disabled until the background job completes.
+    expect(page).to have_css('form[aria-busy="true"] input[type="submit"]:not([disabled])')
   end
 
   it "keeps progress active after enqueueing, then allows assessment and saving" do
@@ -56,6 +59,34 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(Analysis.last.word_assessments.where(assessment_choice: choice)).to exist
   end
 
+  it "bulk assesses only unselected words and saves the resulting choices" do
+    known = AssessmentChoice.create!(key: "known", position: 4)
+    unknown = AssessmentChoice.create!(key: "unknown", position: 1)
+    open_analysis
+    submit_text("猫と犬と鳥")
+    perform_enqueued_jobs
+    expect(page).to have_css("tbody select", count: 3)
+
+    click_button "Apply"
+    expect(all("tbody select").map(&:value)).to eq([ "", "", "" ])
+
+    first("tbody select").select(unknown.label)
+    select known.label, from: "Set unassessed words to"
+    click_button "Apply"
+    expect(all("tbody select").map(&:value)).to eq([ unknown.id.to_s, known.id.to_s, known.id.to_s ])
+
+    # A second bulk action preserves all selections made by the first one.
+    select unknown.label, from: "Set unassessed words to"
+    click_button "Apply"
+    expect(all("tbody select").map(&:value)).to eq([ unknown.id.to_s, known.id.to_s, known.id.to_s ])
+    expect(Analysis.count).to eq(0)
+
+    click_button "Save"
+    expect(page).to have_text("Your analysis results will appear here")
+    expect(Analysis.last.word_assessments.where(assessment_choice: known).count).to eq(2)
+    expect(Analysis.last.word_assessments.where(assessment_choice: unknown).count).to eq(1)
+  end
+
   it "recovers from job failure using the same text and ignores stale results" do
     open_analysis
     submit_text("猫")
@@ -69,6 +100,7 @@ RSpec.describe "Analysis workflow", type: :system do
     allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_call_original
     click_button "Retry analysis"
     expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
+    expect(page).to have_css('form[aria-busy="true"] input[type="submit"]:not([disabled])')
 
     Turbo::StreamsChannel.broadcast_update_to(
       page.find('input[name="stream_key"]', visible: :all).value,
