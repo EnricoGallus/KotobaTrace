@@ -31,30 +31,64 @@ RSpec.describe "Analyses", type: :request do
   end
 
   describe "POST /analysis" do
-    it "queues analysis and responds with an in-progress Turbo Stream" do
+    it "queues analysis and acknowledges enqueueing without overwriting job results" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en")
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en", "attempt-1").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
-        params: { text: "猫を見た", stream_key: stream_key },
+        params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1" },
         headers: { "Accept" => Mime[:turbo_stream].to_s }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include('<turbo-stream action="update" target="analysis_results">')
-      expect(response.body).to include("Analysis in progress…")
+      expect(response).to have_http_status(:accepted)
+      expect(response.body).to be_empty
     end
 
     it "queues the analysis using the selected locale" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja")
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja", "attempt-1").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
-        params: { text: "猫を見た", stream_key: stream_key, locale: "ja" },
+        params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1", locale: "ja" },
         headers: { "Accept" => Mime[:turbo_stream].to_s }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("解析中…")
+      expect(response).to have_http_status(:accepted)
+      expect(response.body).to be_empty
+    end
+  end
+
+  describe "analysis validation and queue errors" do
+    [ nil, "", " \n\t　" ].each do |text|
+      it "rejects blank input #{text.inspect} without enqueueing" do
+        expect(AnalyzeTextJob).not_to receive(:perform_later)
+
+        post analysis_path, params: { text: text, stream_key: "stream", request_id: "attempt-1" },
+          headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Enter some Japanese text")
+        expect(response.body).to include('data-analysis-request-id="attempt-1"')
+      end
+    end
+
+    it "shows a retryable error if the queue rejects the job" do
+      allow(AnalyzeTextJob).to receive(:perform_later).and_return(false)
+
+      post analysis_path, params: { text: "猫", stream_key: "stream", request_id: "attempt-1" },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.body).to include("Retry analysis")
+    end
+
+    it "shows a retryable error if enqueueing fails" do
+      allow(AnalyzeTextJob).to receive(:perform_later).and_raise(ActiveJob::EnqueueError, "Queue offline")
+
+      post analysis_path, params: { text: "猫", stream_key: "stream", request_id: "attempt-1" },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.body).to include("Retry analysis")
+      expect(response.body).not_to include("Queue offline")
     end
   end
 

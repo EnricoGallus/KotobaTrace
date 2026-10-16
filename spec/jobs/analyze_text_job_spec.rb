@@ -56,6 +56,7 @@ RSpec.describe AnalyzeTextJob, type: :job do
       analysis = nil
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
         analysis = options.fetch(:locals).fetch(:analysis)
+        expect(options[:locals][:flashcards_unavailable]).to be(true)
       end
 
       expect { described_class.perform_now("猫を見た", "stream-123") }.not_to raise_error
@@ -64,6 +65,29 @@ RSpec.describe AnalyzeTextJob, type: :job do
       expect(analysis.word_assessments.map(&:in_flashcards)).to all(be_nil)
       analysis.save!
       expect(analysis.reload.words.pluck(:lemma)).to include("猫")
+    end
+
+    it "broadcasts a localized retryable failure with the request ID" do
+      allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_raise(StandardError, "Internal details")
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to).with(
+        "stream-123", target: "analysis_results", partial: "analyses/error",
+        locals: { message: "failed", request_id: "attempt-1" }
+      ) { expect(I18n.locale).to eq(:ja) }
+
+      described_class.perform_now("猫", "stream-123", "ja", "attempt-1")
+    end
+
+    it "broadcasts an empty result with completion metadata" do
+      allow(Flashcards::VocabularyLookup).to receive(:call).and_return(Flashcards::VocabularyCollection.new)
+      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
+        expect(options[:partial]).to eq("analyses/results")
+        expect(options[:locals][:analysis].word_assessments).to be_empty
+        expect(options[:locals][:request_id]).to eq("attempt-1")
+        expect(options[:locals][:flashcards_unavailable]).to be(false)
+      end
+
+      described_class.perform_now("。", "stream-123", "en", "attempt-1")
     end
   end
 end

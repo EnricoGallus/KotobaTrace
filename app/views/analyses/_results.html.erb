@@ -1,3 +1,10 @@
+<div data-analyze-text-target="completion" data-analysis-request-id="<%= local_assigns[:request_id] %>">
+  <% if local_assigns[:flashcards_unavailable] %>
+    <p class="alert alert-info mb-3" role="status"><%= t("analyses.flashcards_unavailable") %></p>
+  <% end %>
+  <% if analysis.word_assessments.empty? %>
+    <p class="alert alert-info" role="status"><%= t("analyses.no_vocabulary") %></p>
+  <% else %>
 <%= form_with url: save_analysis_path, scope: :analysis, method: :post do |form| %>
   <%= form.hidden_field :text, value: analysis.text %>
 
@@ -83,3 +90,5 @@
     <%= form.submit t("analyses.save"), class: "btn btn-primary" %>
   </div>
 <% end %>
+  <% end %>
+</div>

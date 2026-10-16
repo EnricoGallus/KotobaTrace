@@ -119,7 +119,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips node-gyp
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips node-gyp mecab libmecab-dev mecab-ipadic-utf8
 
       - name: Checkout code
         uses: actions/checkout@v7
@@ -128,6 +128,14 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      - name: Build browser assets
+        env:
+          RAILS_ENV: test
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          bin/rails tailwindcss:build
 
       - name: Run RSpec system specs
         if: ${{ hashFiles('spec/system/**/*_spec.rb') != '' }}
@@ -143,5 +151,5 @@ jobs:
         if: failure()
         with:
           name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
+          path: ${{ github.workspace }}/tmp/capybara
           if-no-files-found: ignore

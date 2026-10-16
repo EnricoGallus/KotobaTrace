@@ -1,32 +1,77 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Connects to data-controller="analyze-text"
 export default class extends Controller {
-  static targets = ["submit", "textInput"]
+  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "completion"]
+  static values = { progressLabel: String }
 
-  start() {
-    this.disableForm()
-    this.submitTarget.value = "Analyzing…"
+  prepare(event) {
+    if (this.pending) {
+      event.preventDefault()
+      return
+    }
+
+    this.requestIdTarget.value = crypto.randomUUID()
+    this.resultsTarget.replaceChildren()
   }
 
-  finish(event) {
-    this.enableForm()
-    this.submitTarget.value = "Analyze"
+  start() {
+    this.pending = true
+    this.submitLabel = this.submitTarget.value
+    this.showProgress()
+  }
+
+  submissionFinished(event) {
+    // Turbo's submit-end only acknowledges enqueueing, not job completion.
+    if (!this.pending) return
 
     if (event.detail.success) {
-      console.log("Analysis succeeded")
+      this.showProgress()
     } else {
-      console.log("Analysis failed", event.detail.fetchResponse)
+      // Validation/enqueue errors supply their own terminal Turbo Stream.
+      if (!event.detail.fetchResponse?.contentType?.includes("text/vnd.turbo-stream.html")) {
+        this.requestFailed()
+      }
     }
   }
 
-  disableForm() {
-    this.submitTarget.disabled = true
-    this.textInputTarget.disabled = true
+  showProgress() {
+    this.controlsTarget.disabled = true
+    this.formTarget.setAttribute("aria-busy", "true")
+    this.progressTarget.hidden = false
+    this.submitTarget.value = this.progressLabelValue
   }
 
-  enableForm() {
-    this.submitTarget.disabled = false
-    this.textInputTarget.disabled = false
+  completionTargetConnected(element) {
+    if (element.dataset.analysisRequestId !== this.requestIdTarget.value) return
+    this.finish()
+  }
+
+  filterStream(event) {
+    if (event.target.getAttribute("target") !== this.resultsTarget.id) return
+
+    const completion = event.target.templateElement.content.querySelector("[data-analysis-request-id]")
+    const requestId = completion?.dataset.analysisRequestId
+    // Save-validation responses have no request ID and must remain renderable.
+    if (requestId && (!this.pending || requestId !== this.requestIdTarget.value)) {
+      event.preventDefault()
+    }
+  }
+
+  requestFailed() {
+    if (!this.pending) return
+    this.resultsTarget.replaceChildren(this.errorTemplateTarget.content.cloneNode(true))
+    this.finish()
+  }
+
+  finish() {
+    this.pending = false
+    this.controlsTarget.disabled = false
+    this.formTarget.setAttribute("aria-busy", "false")
+    this.progressTarget.hidden = true
+    if (this.submitLabel) this.submitTarget.value = this.submitLabel
+  }
+
+  retry() {
+    this.formTarget.requestSubmit(this.submitTarget)
   }
 }

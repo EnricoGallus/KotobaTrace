@@ -42,4 +42,26 @@ RSpec.describe "analyses/_results", type: :view do
       expect(document.at_css('input[name="analysis[word_assessments_attributes][0][in_flashcards]"]')).to be_present
     end
   end
+
+  it "explains an empty result without displaying an empty table or Save button" do
+    render partial: "analyses/results", locals: {
+      analysis: Analysis.new(text: "。"), assessment_choices: [], request_id: "attempt-1"
+    }
+
+    expect(rendered).to include("No study vocabulary was found")
+    expect(rendered).to include('data-analysis-request-id="attempt-1"')
+    expect(Nokogiri::HTML(rendered).css("table, form")).to be_empty
+  end
+
+  it "explains unavailable flashcards while keeping vocabulary saveable" do
+    analysis = Analysis.new(text: "猫")
+    analysis.word_assessments.build(word: Word.new(lemma: "猫", part_of_speech: "名詞"))
+
+    render partial: "analyses/results", locals: {
+      analysis: analysis, assessment_choices: [], flashcards_unavailable: true
+    }
+
+    expect(rendered).to include("Flashcard lookup is unavailable")
+    expect(Nokogiri::HTML(rendered).at_css('input[type="submit"]')["value"]).to eq("Save")
+  end
 end

@@ -1,0 +1,7 @@
+<div class="alert alert-error" role="alert"
+     data-analyze-text-target="completion" data-analysis-request-id="<%= request_id %>">
+  <p><%= t("analyses.errors.#{message}") %></p>
+  <% unless message == "blank_input" %>
+    <button type="button" class="btn btn-sm" data-action="analyze-text#retry"><%= t("analyses.retry") %></button>
+  <% end %>
+</div>

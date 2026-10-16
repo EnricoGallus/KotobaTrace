@@ -18,6 +18,7 @@ RSpec.describe Flashcards::VocabularyLookup do
 
     collection = lookup
 
+    expect(collection).not_to be_unavailable
     expect(collection).to contain_exactly("猫")
     expect(collection).to include("猫")
     expect(collection).not_to include("犬")
@@ -71,6 +72,7 @@ RSpec.describe Flashcards::VocabularyLookup do
       expect(collection).to be_empty
       expect(collection).not_to be_checked
       expect(collection).not_to include("猫")
+      expect(collection).to be_unavailable
     end
   end
 

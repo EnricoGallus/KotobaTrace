@@ -9,7 +9,7 @@ module Flashcards
 
       unless provider == "anki"
         Rails.logger.warn("Unsupported flashcard provider; skipping vocabulary lookup")
-        return VocabularyCollection.new
+        return VocabularyCollection.new(unavailable: true)
       end
 
       return VocabularyCollection.new if deck.blank? || expression_field.blank?
@@ -19,7 +19,7 @@ module Flashcards
     rescue StandardError => error
       # Optional enrichment must never prevent analysis or saving.
       Rails.logger.warn("Flashcard vocabulary lookup failed (#{error.class}); continuing without enrichment")
-      VocabularyCollection.new
+      VocabularyCollection.new(unavailable: true)
     end
   end
 end

@@ -1,15 +1,19 @@
-<div class="mx-auto max-w-4xl px-5 pt-7 pb-20">
+<div class="mx-auto max-w-4xl px-5 pt-7 pb-20"
+     data-controller="analyze-text"
+     data-action="turbo:before-stream-render@document->analyze-text#filterStream"
+     data-analyze-text-progress-label-value="<%= t("analyses.in_progress") %>">
   <%= turbo_stream_from @stream_key %>
 
   <h1 class="mb-6"><%= t("app.name") %></h1>
 
   <%= form_with url: analysis_path, method: :post,
         class: "card card-border bg-base-100 mb-8",
-        data: { controller: "analyze-text", action: "turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#finish" } do %>
-    <div class="card-body">
+        data: { analyze_text_target: "form", action: "submit->analyze-text#prepare turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#submissionFinished turbo:fetch-request-error->analyze-text#requestFailed" } do %>
+    <fieldset class="card-body" data-analyze-text-target="controls">
       <%= hidden_field_tag :stream_key, @stream_key %>
+      <%= hidden_field_tag :request_id, SecureRandom.uuid, data: { analyze_text_target: "requestId" } %>
       <%= label_tag :text, t("analyses.text_label"), class: "label" %>
-      <%= text_area_tag :text, @text, rows: 10, lang: "ja",
+      <%= text_area_tag :text, @text, rows: 10, lang: "ja", required: true,
             class: "textarea w-full",
             data: { analyze_text_target: "textInput" } %>
 
@@ -17,10 +21,15 @@
         <%= submit_tag t("analyses.submit"), class: "btn btn-primary",
               data: { analyze_text_target: "submit" } %>
       </div>
-    </div>
+    </fieldset>
   <% end %>
 
-  <div id="analysis_results">
+  <p hidden role="status" data-analyze-text-target="progress"><%= t("analyses.in_progress") %></p>
+  <div id="analysis_results" aria-live="polite" data-analyze-text-target="results">
     <p class="text-base-content/70"><%= t("analyses.empty_results") %></p>
   </div>
+
+  <template data-analyze-text-target="errorTemplate">
+    <%= render "analyses/error", message: "request_failed", request_id: nil %>
+  </template>
 </div>

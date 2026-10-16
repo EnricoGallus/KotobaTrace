@@ -14,6 +14,13 @@ ja:
   analyses:
     text_label: 解析するテキスト
     submit: 解析
+    retry: もう一度解析
+    no_vocabulary: 学習対象の語彙が見つかりませんでした。日本語の文章や単語リストをお試しください。名前・数字・機能語などは除外されることがあります。
+    flashcards_unavailable: 単語カードに接続できません。語彙の評価と保存はできますが、登録状況は未確認です。
+    errors:
+      blank_input: 解析する日本語のテキストを入力してください。
+      failed: 解析を完了できませんでした。入力したテキストは残っています。もう一度お試しください。
+      request_failed: 解析の開始または応答の受信に失敗しました。接続を確認して、もう一度お試しください。
     save: 保存
     assessment_prompt: 評価を選択
     in_progress: 解析中…

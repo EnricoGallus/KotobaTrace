@@ -76,8 +76,10 @@ analyzer. Grammar extraction must consume raw morphemes directly.
 - Confirm optional flashcard enrichment during actual study with Anki open and
   closed. The service fallback, “not checked” state, and environment-based
   provider/deck/field configuration are implemented and covered by specs.
-- Handle empty input and analysis failures with useful UI feedback and a retry
-  path, so the screen does not remain indefinitely in progress.
+- Confirm the implemented blank-input rejection, no-vocabulary guidance, and
+  localized failure/retry feedback during real use. Progress now follows terminal
+  job results, with request IDs preventing stale updates. Browser specs cover the
+  complete workflow and optional flashcard outage notices.
 - Clarify encountered-form readings versus dictionary-form readings. A reading
   assembled from inflected morphemes must not silently become an authoritative
   dictionary reading for a normalized word.
@@ -272,7 +274,6 @@ workflow without developer assistance, with tested data ownership and recovery.
 
 ## Recommended Next Action
 
-Complete Milestone 1's remaining reliability work, especially visible job failures
-and reading correctness, then extend the existing saved assessments into durable
+Complete Milestone 1's remaining real-material validation and reading correctness, then extend the existing saved assessments into durable
 occurrence history in Milestone 2. Continue refining extraction from real examples
 without moving learner-oriented rules into `MorphologicalAnalyzer`.

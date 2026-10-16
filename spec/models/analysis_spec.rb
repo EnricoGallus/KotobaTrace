@@ -25,4 +25,11 @@ RSpec.describe Analysis, type: :model do
     )
     expect(assessment.surfaces).to eq([ "猫" ])
   end
+
+  it "rejects blank text when saving directly" do
+    analysis = described_class.new(text: "　 ")
+
+    expect(analysis).not_to be_valid
+    expect(analysis.errors[:text]).to be_present
+  end
 end

@@ -5,12 +5,25 @@ class AnalysesController < ApplicationController
 
   def create
     text = params[:text].to_s
-    AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s)
+    request_id = params.require(:request_id)
 
-    render turbo_stream: turbo_stream.update(
-      "analysis_results",
-      t("analyses.in_progress")
-    )
+    if text.blank?
+      render_analysis_error("blank_input", request_id, :unprocessable_content)
+      return
+    end
+
+    job = AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s, request_id)
+    unless job
+      render_analysis_error("failed", request_id, :service_unavailable)
+      return
+    end
+
+    # The browser shows progress immediately. An empty acknowledgement cannot
+    # overwrite results from a job that finishes before this request returns.
+    head :accepted
+  rescue ActiveJob::EnqueueError => error
+    Rails.logger.error("Analysis enqueue failed (#{error.class})")
+    render_analysis_error("failed", request_id, :service_unavailable)
   end
 
   def save
@@ -31,6 +44,14 @@ class AnalysesController < ApplicationController
   end
 
   private
+
+  def render_analysis_error(message, request_id, status)
+    render turbo_stream: turbo_stream.update(
+      "analysis_results",
+      partial: "analyses/error",
+      locals: { message: message, request_id: request_id }
+    ), status: status
+  end
 
   def analysis_params
     params.require(:analysis).permit(

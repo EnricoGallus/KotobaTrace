@@ -14,6 +14,13 @@ en:
   analyses:
     text_label: Text to analyze
     submit: Analyze
+    retry: Retry analysis
+    no_vocabulary: No study vocabulary was found. Try a Japanese passage or vocabulary list; names, numbers, and function words may be filtered out.
+    flashcards_unavailable: Flashcard lookup is unavailable. You can still assess and save vocabulary; membership has not been checked.
+    errors:
+      blank_input: Enter some Japanese text before analyzing.
+      failed: Analysis could not be completed. Your text is still here; please try again.
+      request_failed: Could not start analysis or receive its response. Check your connection and try again.
     save: Save
     assessment_prompt: Choose an assessment
     in_progress: "Analysis in progress…"

@@ -18,6 +18,9 @@ KotobaTrace is an early, local-development application. The current workflow is:
 4. Save the analysis and assessments.
 
 Analysis runs as a background job and updates the results through Turbo Streams.
+Progress remains active until the job finishes. Blank input is rejected, failures
+keep the original text with a retry action, and empty results explain what to try.
+A flashcard lookup failure shows an informational notice without blocking saving.
 Results group vocabulary by normalized form and part of speech.
 
 Personal-history screens, persisted individual occurrences, a Study Inbox,
@@ -136,7 +139,11 @@ bundle exec rspec
 
 The suite includes real MeCab examples, so the native library and compatible
 dictionary must be available. Anki integration in the specs uses test doubles;
-a running Anki instance is not required for the test suite.
+a running Anki instance is not required for the test suite. Browser system specs
+also cover progress, failure/retry, empty results, and saving. Build JavaScript
+and CSS before running them (`yarn build` and `bin/rails tailwindcss:build`). The
+dev container uses remote Selenium; outside it, install Chrome/Chromium and run
+`bundle exec rspec spec/system`.
 
 For the broader local checks configured in [config/ci.rb](config/ci.rb):
 
@@ -180,5 +187,5 @@ particles and auxiliaries that vocabulary extraction can group or omit.
 - [Development milestones](docs/milestones.md): implemented foundations, remaining
   work, acceptance criteria, and later possibilities.
 
-The immediate focus is visible, recoverable analysis failures, followed by encounter
-history and a useful Study Inbox. Larger features follow real study feedback.
+The immediate focus is real-material extraction review and reading correctness,
+followed by encounter history and a useful Study Inbox. Larger features follow real study feedback.
