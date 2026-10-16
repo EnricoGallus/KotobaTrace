@@ -1,0 +1,73 @@
+# .codex/config.toml
+
+# -----------------------------------------------
+# Rails MCP
+# Runs inside the existing devcontainer
+# -----------------------------------------------
+
+[mcp_servers.rails]
+command = "docker"
+args = [
+  "exec",
+  "-i",
+  "-w",
+  "/workspaces/kotoba_trace",
+  "YOUR_DEVCONTAINER_NAME",
+  "rails-mcp-server",
+  "--single-project"
+]
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# Context7 - Documentation
+# -----------------------------------------------
+
+[mcp_servers.context7]
+command = "npx"
+args = [
+  "-y",
+  "@upstash/context7-mcp"
+]
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# PostgreSQL - Restricted mode
+# -----------------------------------------------
+
+[mcp_servers.postgres]
+command = "uvx"
+args = [
+  "--with",
+  "mcp<2",
+  "postgres-mcp",
+  "--access-mode=restricted"
+]
+env_vars = ["DATABASE_URI"]
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# Sequential Thinking
+# -----------------------------------------------
+
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-sequential-thinking"
+]
+
+
+# -----------------------------------------------
+# Filesystem - macOS project directory
+# -----------------------------------------------
+
+[mcp_servers.filesystem]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-filesystem",
+  "/Users/enrico/Projects/kotoba_trace"
+]
