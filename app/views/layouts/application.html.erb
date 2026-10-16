@@ -24,13 +24,13 @@
   </head>
 
   <body>
-    <nav class="container mx-auto mt-4 flex justify-end gap-3 px-5" aria-label="<%= t("language.choose") %>">
+    <nav class="app-shell language-nav" aria-label="<%= t("language.choose") %>">
       <%= link_to t("language.english"), url_for(locale: :en), lang: "en",
             aria: { current: I18n.locale == :en ? "page" : nil } %>
       <%= link_to t("language.japanese"), url_for(locale: :ja), lang: "ja",
             aria: { current: I18n.locale == :ja ? "page" : nil } %>
     </nav>
-    <main class="container mx-auto mt-28 px-5 flex">
+    <main class="app-shell app-main">
       <%= yield %>
     </main>
   </body>

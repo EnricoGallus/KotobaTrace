@@ -108,10 +108,10 @@ RSpec.describe "Analysis workflow", type: :system do
       expect(page).to have_css("[data-history-passage-count]", text: "2")
       expect(page).to have_text("First encounter")
       expect(page).to have_text("Last encounter")
-      expect(page).to have_text("Don't know yet: 1")
-      expect(page).to have_text("Know both: 1")
+      expect(page).to have_css(".assessment-totals li", text: /Don't know yet:\s*1/)
+      expect(page).to have_css(".assessment-totals li", text: /Know both:\s*1/)
       expect(page).to have_text("Flashcard lookup is unavailable")
-      expect(page).to have_css("tbody tr", count: 2)
+      expect(page).to have_css("[data-history-entry]", count: 2)
       click_button "Close"
     end
     expect(page.current_url).to eq(original_url)
@@ -136,7 +136,42 @@ RSpec.describe "Analysis workflow", type: :system do
     click_button "猫"
     within("dialog[open]") do
       expect(page).to have_css("[data-history-passage-count]", text: "3")
-      expect(page).to have_text("Don't know yet: 2")
+      expect(page).to have_css(".assessment-totals li", text: /Don't know yet:\s*2/)
+    end
+  end
+
+  [ [ 1280, 900 ], [ 390, 844 ] ].each do |width, height|
+    it "keeps the workspace stable and the history dialog usable at #{width}px" do
+      page.driver.browser.manage.window.resize_to(width, height)
+      known = AssessmentChoice.create!(key: "known", position: 4)
+      word = Word.create!(lemma: "猫", part_of_speech: "名詞")
+      8.times { Analysis.create!(text: "猫がいる文章です。" * 12).word_assessments.create!(word: word, assessment_choice: known) }
+      open_analysis
+      initial_width = find('[data-analyze-text-target="form"]').native.rect.width
+      expect(initial_width).to be > width * 0.8
+      submit_text("猫と犬")
+      perform_enqueued_jobs
+      expect(page).to have_css("#analysis_results tbody tr", count: 2)
+      expect(find('[data-analyze-text-target="form"]').native.rect.width).to be_within(1).of(initial_width)
+      expect(find(".results-panel").native.rect.width).to be_within(1).of(initial_width)
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
+      screenshot_dir = Rails.root.join("tmp", "design-review")
+      FileUtils.mkdir_p(screenshot_dir)
+      page.save_screenshot(screenshot_dir.join("workspace-#{width}.png"))
+      find("#analysis_results tbody tr", text: "猫").find("select").select(known.label)
+      click_button "猫"
+      within("dialog[open]") do
+        expect(page).to have_css("[data-history-entry]", count: 8)
+        expect(page).to have_css('.ui-notice--warning[role="status"]')
+        expect(page).to have_no_css('[role="alert"]')
+      end
+      expect(page.evaluate_script("document.querySelector('.history-dialog-body').scrollWidth <= document.querySelector('.history-dialog-body').clientWidth")).to be(true)
+      expect(page.evaluate_script("document.querySelector('dialog').getBoundingClientRect().width <= window.innerWidth")).to be(true)
+      page.save_screenshot(screenshot_dir.join("history-#{width}.png"))
+      page.execute_script("document.querySelector('.history-dialog-body').scrollTop = 100000")
+      expect(page.evaluate_script("document.querySelector('.history-dialog-header').getBoundingClientRect().top >= 0")).to be(true)
+      within("dialog[open]") { click_button "Close" }
+      expect(find("#analysis_results tbody tr", text: "猫").find("select").value).to eq(known.id.to_s)
     end
   end
 

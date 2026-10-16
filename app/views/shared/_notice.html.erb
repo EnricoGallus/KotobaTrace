@@ -1,0 +1,7 @@
+<div class="ui-notice ui-notice--<%= tone %>" role="<%= tone == "error" ? "alert" : "status" %>">
+  <span class="ui-notice-icon" aria-hidden="true"><%= tone == "error" ? "!" : "i" %></span>
+  <div>
+    <p class="ui-notice-title"><%= title %></p>
+    <p><%= message %></p>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+<header class="history-word">
+  <h3 lang="ja"><%= word.lemma %></h3>
+  <span class="badge badge-outline" lang="ja"><%= word.part_of_speech %></span>
+</header>
+<p class="history-scope"><%= t("word_history.saved_only") %></p>
+<dl class="history-stats">
+  <div>
+    <dt><%= t("word_history.passages") %></dt>
+    <dd class="history-total" data-history-passage-count><%= history.size %></dd>
+  </div>
+  <div>
+    <dt><%= t("word_history.first_encounter") %></dt>
+    <dd><%= history.any? ? time_tag(history.last.analysis.created_at, format: "%Y-%m-%d %H:%M %Z") : t("word_history.never") %></dd>
+  </div>
+  <div>
+    <dt><%= t("word_history.last_encounter") %></dt>
+    <dd><%= history.any? ? time_tag(history.first.analysis.created_at, format: "%Y-%m-%d %H:%M %Z") : t("word_history.never") %></dd>
+  </div>
+</dl>

@@ -1,0 +1,25 @@
+<section class="history-section" aria-labelledby="history_flashcards_title">
+  <h4 id="history_flashcards_title"><%= t("analyses.columns.flashcards") %></h4>
+  <% if flashcards.unavailable? %>
+    <%= render "shared/notice", tone: "warning", title: t("word_history.flashcards_unavailable_title"), message: t("analyses.flashcards_unavailable") %>
+  <% elsif !flashcards.checked? %>
+    <p class="history-empty"><%= t("word_history.flashcards_not_configured") %></p>
+  <% elsif !flashcards.include?(word.lemma) %>
+    <p class="history-empty"><%= t("analyses.flashcard_status.not_included") %></p>
+  <% else %>
+    <p class="flashcard-membership"><span class="badge badge-success badge-soft"><%= t("analyses.flashcard_status.included") %></span> <span><%= flashcards.provider&.humanize %></span></p>
+    <% flashcards.notes_for(word.lemma).each do |note| %>
+      <details class="flashcard-note">
+        <summary><%= t("word_history.note") %> <%= note["noteId"] %> <span><%= note["modelName"] %></span></summary>
+        <dl>
+          <% note.fetch("fields", {}).each do |name, field| %>
+            <div><dt><%= name %></dt><dd><%= strip_tags(field["value"].to_s) %></dd></div>
+          <% end %>
+          <% if note["tags"].present? %>
+            <div><dt><%= t("word_history.tags") %></dt><dd><%= note["tags"].join(", ") %></dd></div>
+          <% end %>
+        </dl>
+      </details>
+    <% end %>
+  <% end %>
+</section>

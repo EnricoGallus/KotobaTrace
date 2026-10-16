@@ -1,11 +1,19 @@
 <div data-analyze-text-target="completion" data-analysis-request-id="<%= local_assigns[:request_id] %>">
   <% if local_assigns[:flashcards_unavailable] %>
-    <p class="alert alert-info mb-3" role="status"><%= t("analyses.flashcards_unavailable") %></p>
+    <%= render "shared/notice", tone: "warning", title: t("word_history.flashcards_unavailable_title"), message: t("analyses.flashcards_unavailable") %>
   <% end %>
   <% if analysis.word_assessments.empty? %>
-    <p class="alert alert-info" role="status"><%= t("analyses.no_vocabulary") %></p>
+    <div class="empty-state ui-panel" role="status">
+      <h2><%= t("analyses.no_vocabulary_title") %></h2>
+      <p><%= t("analyses.no_vocabulary") %></p>
+    </div>
   <% else %>
-<%= form_with url: save_analysis_path, scope: :analysis, method: :post do |form| %>
+<%= form_with url: save_analysis_path, scope: :analysis, method: :post, class: "results-panel ui-panel" do |form| %>
+  <header class="results-heading">
+    <h2><%= t("analyses.results_title") %></h2>
+    <p><%= t("analyses.results_hint") %></p>
+    <p class="table-scroll-hint"><%= t("analyses.table_scroll_hint") %></p>
+  </header>
   <%= form.hidden_field :text, value: analysis.text %>
 
   <% errors = analysis.errors.full_messages %>
@@ -14,7 +22,7 @@
     <% errors.concat(assessment.word&.errors&.full_messages || []) %>
   <% end %>
   <% if errors.any? %>
-    <div class="alert alert-error mb-3" role="alert">
+    <div class="ui-notice ui-notice--error" role="alert">
       <ul>
         <% errors.uniq.each do |error| %>
           <li><%= error %></li>
@@ -23,7 +31,7 @@
     </div>
   <% end %>
 
-  <div class="mb-4 flex flex-wrap items-end gap-3">
+  <div class="assessment-toolbar">
     <div>
       <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
       <%= select_tag :bulk_assessment,
@@ -38,8 +46,8 @@
   </div>
 
   <% passage_counts = saved_passage_counts(analysis) %>
-  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-    <table class="table">
+  <div class="vocabulary-scroll" tabindex="0" role="region" aria-label="<%= t("analyses.results_title") %>">
+    <table class="table vocabulary-table">
       <thead>
         <tr>
           <th><%= t("analyses.columns.surface") %></th>
@@ -87,9 +95,9 @@
               <% when true %>
                 <span class="badge badge-success badge-sm" title="<%= t("analyses.flashcard_status.included") %>">✓</span>
               <% when false %>
-                <span class="badge badge-warning badge-soft badge-sm" title="<%= t("analyses.flashcard_status.not_included") %>">✗</span>
+                <span class="badge badge-ghost badge-sm" title="<%= t("analyses.flashcard_status.not_included") %>">✗</span>
               <% else %>
-                <span class="text-base-content/40" title="<%= t("analyses.flashcard_status.not_checked") %>">—</span>
+                <span class="membership-unchecked" title="<%= t("analyses.flashcard_status.not_checked") %>"><%= t("analyses.flashcard_status.not_checked") %></span>
               <% end %>
               <%= hidden_field_tag "#{field_name}[in_flashcards]", assessment.in_flashcards %>
             </td>
@@ -110,7 +118,7 @@
     </table>
   </div>
 
-  <div class="mt-4 flex justify-end">
+  <div class="results-footer">
     <%= form.submit t("analyses.save"), class: "btn btn-primary" %>
   </div>
 <% end %>

@@ -12,6 +12,12 @@ ja:
     meaning_only: 意味だけ知っている
     known: 読みも意味も知っている
   analyses:
+    table_scroll_hint: 横にスクロールすると、すべての列を確認できます。
+    introduction: 出会った日本語を、自分の語彙に。文章を貼り付けて、語彙を確認し、学習の履歴を残しましょう。
+    results_title: 語彙
+    results_hint: 基本形を選ぶと保存済みの履歴を確認できます。現在の評価はそのまま残ります。
+    error_title: 解析を確認してください
+    no_vocabulary_title: 学習対象の語彙が見つかりませんでした
     text_label: 解析するテキスト
     submit: 解析
     retry: もう一度解析
@@ -40,6 +46,8 @@ ja:
       not_included: 単語カードに未登録
       not_checked: 未確認
   word_history:
+    flashcards_unavailable_title: 単語カードに接続できません
+    load_failed_title: 履歴を読み込めませんでした
     title: 単語の履歴
     close: 閉じる
     loading: 単語の履歴を読み込み中…

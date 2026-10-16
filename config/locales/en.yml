@@ -12,6 +12,12 @@ en:
     meaning_only: Know the meaning only
     known: Know both
   analyses:
+    table_scroll_hint: Swipe or scroll sideways to see all columns.
+    introduction: Learn the Japanese you encounter. Paste, review, and build your vocabulary history.
+    results_title: Vocabulary
+    results_hint: Select a base form to explore its saved history. Your current selections stay here.
+    error_title: Analysis needs your attention
+    no_vocabulary_title: No study vocabulary found
     text_label: Text to analyze
     submit: Analyze
     retry: Retry analysis
@@ -40,6 +46,8 @@ en:
       not_included: Not in flashcards
       not_checked: Not checked
   word_history:
+    flashcards_unavailable_title: Flashcards unavailable
+    load_failed_title: History could not be loaded
     title: Word history
     close: Close
     loading: Loading word history…

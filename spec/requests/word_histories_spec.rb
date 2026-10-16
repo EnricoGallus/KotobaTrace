@@ -29,8 +29,8 @@ RSpec.describe "Word histories", type: :request do
     expect(document.css("time").first(2).map { |time| time["datetime"] }).to eq([
       Time.utc(2026, 10, 10, 10).iso8601, Time.utc(2026, 10, 12, 10).iso8601
     ])
-    expect(document.css("tbody tr").size).to eq(3)
-    expect(document.text).to include("Don't know yet: 1", "Know both: 1", "Unassessed: 1")
+    expect(document.css("[data-history-entry]").size).to eq(3)
+    expect(document.css(".assessment-totals").text.split.join(" ")).to include("Don't know yet: 1", "Know both: 1", "Unassessed: 1")
     expect(response.body).to include("猫。猫。猫。", "猫がいる", "猫を見た")
     expect(response.body).not_to include("別の猫")
     expect(response.body).to include("current unsaved analysis is excluded")
