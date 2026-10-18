@@ -23,7 +23,13 @@ RSpec.describe "Conservative Japanese vocabulary grouping" do
     "流行ってた" => [ "流行る", "ハヤッテタ", "動詞" ],
     "流行ってます" => [ "流行る", "ハヤッテマス", "動詞" ],
     "読んでる" => [ "読む", "ヨンデル", "動詞" ],
-    "引き継いだ" => [ "引き継ぐ", "ヒキツイダ", "動詞" ]
+    "引き継いだ" => [ "引き継ぐ", "ヒキツイダ", "動詞" ],
+    "目を向ける" => [ "目を向ける", "メヲムケル", "表現" ],
+    "目を向けた" => [ "目を向ける", "メヲムケタ", "表現" ],
+    "目を向けている" => [ "目を向ける", "メヲムケテイル", "表現" ],
+    "目を向けなかった" => [ "目を向ける", "メヲムケナカッタ", "表現" ],
+    "はるかに" => [ "はるかに", "ハルカニ", "副詞" ],
+    "遥かに" => [ "はるかに", "ハルカニ", "副詞" ]
   }.each do |text, (base_form, reading, pos)|
     it "extracts #{text} as one complete vocabulary occurrence" do
       candidates = extract(text)
@@ -31,6 +37,46 @@ RSpec.describe "Conservative Japanese vocabulary grouping" do
       expect(candidates.length).to eq(1)
       expect(candidates.first).to have_attributes(surface: text, base_form: base_form, reading: reading, part_of_speech: pos)
       expect(candidates.first.morphemes.map(&:surface).join).to eq(text)
+    end
+  end
+
+  it "keeps the following adjective outside an adverbial expression" do
+    expect(extract("はるかに大きい").map(&:surface)).to eq(%w[はるかに 大きい])
+  end
+
+  it "retains bare はるか separately from the adverbial form" do
+    expect(extract("はるか").map(&:base_form)).to eq([ "はるか" ])
+    expect(extract("はるかに").map(&:base_form)).to eq([ "はるかに" ])
+  end
+
+  it "normalizes the single-token adverb spelling as well as split tokens" do
+    candidates = extract("遥か。遥かに。")
+    expect(candidates.map { |c| [ c.surface, c.base_form ] }).to eq([
+      [ "遥か", "遥か" ], [ "遥かに", "はるかに" ]
+    ])
+  end
+
+  it "does not reinterpret a name and case particle as an adverbial expression" do
+    morphemes = Japanese::MorphologicalAnalyzer.call("はるかに")
+    name = morphemes.first.with(pos_subtype1: "固有名詞")
+    case_particle = morphemes.last.with(pos_subtype1: "格助詞")
+
+    expect(Japanese::VocabularyRules::LexicalExpression.call([ name, case_particle ], 0)).to be_nil
+  end
+
+  it "does not absorb unrelated words around a verbal expression" do
+    expect(extract("問題に目を向けた。家庭。").map(&:base_form)).to eq(%w[問題 目を向ける 家庭])
+  end
+
+  it "requires the reviewed noun, particle and verb combination" do
+    expect(extract("目に向ける").map(&:base_form)).to eq(%w[目 向ける])
+    expect(extract("顔を向ける").map(&:base_form)).to eq(%w[顔 向ける])
+    expect(extract("目を閉じる").map(&:base_form)).to eq(%w[目 閉じる])
+  end
+
+  [ "目を\n向ける", "目 を向ける", "目を。向ける", "はるか に", "はるか\nに" ].each do |text|
+    it "does not form expressions across boundaries in #{text.inspect}" do
+      expect(extract(text).map(&:base_form)).not_to include("目を向ける", "はるかに")
     end
   end
 

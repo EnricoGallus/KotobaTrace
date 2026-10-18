@@ -34,7 +34,21 @@ surface. Repeated occurrences remain separate until the result screen groups the
    Honorific noun and suffix rules can wrap compound heads.
 
 Adjacent nouns alone are insufficient evidence: `採用家庭` stays as two words.
-Particles are also boundaries: `気持ちの面` yields `気持ち` and `面`.
+Particles normally remain boundaries: `気持ちの面` yields `気持ち` and `面`.
+Reviewed lexical expressions can include internal particles:
+
+- `目を向ける` is assessed as one expression (`表現`). Its final verb uses the
+  existing verb rule, so `目を向けた` and `目を向けている` share that base form
+  while retaining their complete encountered surfaces and readings.
+- `はるかに` is retained as an adverbial study item, including its `に`.
+  `遥かに` shares the base form `はるかに`, whether emitted as one token or
+  split by the tokenizer. Bare `はるか` stays
+  separate. Matching requires the adverbial particle subtype; an arbitrary
+  noun followed by the case particle `に` does not become a new lexical entry.
+
+These entries live in `VocabularyLexicon` and run ahead of generic word rules.
+They require exact lexical and POS matches and respect the same source boundaries.
+An expression receives one assessment instead of duplicate component assessments.
 No external dictionary service is required by these rules.
 
 ## Contextual interpretation

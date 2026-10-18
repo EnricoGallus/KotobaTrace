@@ -2,6 +2,7 @@ module Japanese
   class VocabularyExtractor
     RULES = [
       VocabularyRules::NameHonorific,
+      VocabularyRules::LexicalExpression,
       VocabularyRules::HonorificVerb,
       VocabularyRules::HonorificNoun,
       VocabularyRules::TimeExpression,

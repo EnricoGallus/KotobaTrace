@@ -107,6 +107,27 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(Analysis.last.words.pluck(:dictionary_reading)).to all(be_nil)
   end
 
+  it "preserves particles within reviewed expressions and saves their normalized forms" do
+    known = AssessmentChoice.create!(key: "known", position: 4)
+    open_analysis
+    submit_text("問題に目を向けた。はるかに大きい。")
+    perform_enqueued_jobs
+
+    expected_forms = %w[問題 目を向ける はるかに 大きい]
+    expect(page).to have_css("tbody tr", count: expected_forms.length)
+    expect(all("tbody tr td:nth-child(2)").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expression_row = find("tbody tr", text: "目を向けた")
+    expect(expression_row.find("td:nth-child(3)").text).to eq("メヲムケタ")
+    expect(expression_row.find("td:nth-child(4)").text).to eq("表現")
+    expect(find("tbody tr", text: "はるかに").find("td:nth-child(3)").text).to eq("ハルカニ")
+
+    select known.label, from: "Set unassessed words to"
+    click_button "Apply"
+    click_button "Save"
+    expect(page).to have_text("Your analysis results will appear here")
+    expect(Analysis.last.words.pluck(:lemma)).to match_array(expected_forms)
+  end
+
   it "bulk assesses only unselected words and saves the resulting choices" do
     known = AssessmentChoice.create!(key: "known", position: 4)
     unknown = AssessmentChoice.create!(key: "unknown", position: 1)

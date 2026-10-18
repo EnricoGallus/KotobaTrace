@@ -76,3 +76,5 @@ gem "csv", "~> 3.3"
 gem "anki_connect", "~> 0.2.0"
 
 gem "tailwindcss-rails", "~> 4.6"
+
+gem "ruby_llm", "~> 2.1"
