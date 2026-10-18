@@ -107,6 +107,7 @@
               <%= hidden_field_tag "#{word_field_name}[dictionary_reading]", word&.dictionary_reading %>
               <%= select_tag "#{field_name}[assessment_choice_id]",
                     options_from_collection_for_select(assessment_choices, :id, :label, assessment.assessment_choice_id),
+                    required: true,
                     prompt: t("analyses.assessment_prompt"),
                     class: "select select-bordered select-sm",
                     data: { analyze_text_target: "assessment" } %>

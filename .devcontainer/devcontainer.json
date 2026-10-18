@@ -39,7 +39,8 @@
         "kirillpalkin.vscode-ruby-extend-intellisense",
         "aliariff.vscode-erb-beautify",
         "donjayamanne.githistory",
-        "ms-ossdata.vscode-pgsql"
+        "ms-ossdata.vscode-pgsql",
+        "openai.chatgpt"
       ],
       "settings": {
         "[ruby]": {

@@ -63,6 +63,8 @@ RSpec.describe AnalyzeTextJob, type: :job do
 
       expect(analysis.word_assessments).not_to be_empty
       expect(analysis.word_assessments.map(&:in_flashcards)).to all(be_nil)
+      choice = AssessmentChoice.create!(key: "known", position: 4)
+      analysis.word_assessments.each { |assessment| assessment.assessment_choice = choice }
       analysis.save!
       expect(analysis.reload.words.pluck(:lemma)).to include("猫")
     end

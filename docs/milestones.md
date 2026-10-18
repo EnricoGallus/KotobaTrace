@@ -140,9 +140,6 @@ specs, including a reload and a later third saved passage.
 - Distinguish a word absent from Anki from an existing card repeatedly missed in
   real reading. Anki membership does not imply knowledge.
 - Support marking known and selecting candidates for later study.
-- TODO: Treat Ignore as skipping a word in the current passage: do not save its
-  word/analysis link or assessment, or create a new word solely for that ignored
-  result. Keep prior saved history intact.
 - TODO: Add a persistent “Never suggest this word again” preference. “Dismiss”
   refers to this same action, not a separate state. Suppressed words stay out of
   the Study Inbox even after later encounters, while existing history remains.

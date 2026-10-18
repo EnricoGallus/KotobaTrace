@@ -1,15 +1,19 @@
 class WordAssessment < ApplicationRecord
   belongs_to :analysis, inverse_of: :word_assessments
   belongs_to :word, inverse_of: :word_assessments
-  belongs_to :assessment_choice, optional: true
+  belongs_to :assessment_choice, optional: false
 
   attribute :in_flashcards, :boolean
   attr_accessor :surfaces, :surface_readings
 
   accepts_nested_attributes_for :word
 
-  validates :assessment_choice, presence: true, if: -> { assessment_choice_id.present? }
+  validate :assessment_choice_is_not_ignore
   before_validation :set_assessed_at, if: -> { assessment_choice.present? }
+
+  def ignored?
+    assessment_choice&.key == "ignore"
+  end
 
   def word_attributes=(attributes)
     attributes = attributes.to_h.symbolize_keys
@@ -21,6 +25,10 @@ class WordAssessment < ApplicationRecord
   end
 
   private
+
+  def assessment_choice_is_not_ignore
+    errors.add(:assessment_choice, :invalid) if ignored?
+  end
 
   def set_assessed_at
     self.assessed_at ||= Time.current

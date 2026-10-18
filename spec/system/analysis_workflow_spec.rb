@@ -51,12 +51,34 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(page).to have_button("Analyze", disabled: false)
     expect(page).to have_field("text", with: "猫を見た", disabled: false)
     expect(page).to have_no_css('[data-analyze-text-target="progress"]', visible: true)
-    first("tbody select").select(choice.label)
+    all("tbody select").each { |select| select.select(choice.label) }
     click_button "Save"
 
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.text).to eq("猫を見た")
     expect(Analysis.last.word_assessments.where(assessment_choice: choice)).to exist
+  end
+
+  it "requires a choice for every word and skips ignored words on save" do
+    known = AssessmentChoice.create!(key: "known", position: 4)
+    ignore = AssessmentChoice.create!(key: "ignore", position: 0)
+    open_analysis
+    submit_text("猫と犬")
+    perform_enqueued_jobs
+    expect(page).to have_css("tbody select[required]", count: 2)
+
+    cat_row = find("tbody tr", text: "猫")
+    cat_row.find("select").select(known.label)
+    click_button "Save"
+    expect(page.evaluate_script("document.querySelector('.results-panel').checkValidity()")).to be(false)
+    expect(Analysis.count).to eq(0)
+    expect(WordAssessment.count).to eq(0)
+
+    find("tbody tr", text: "犬").find("select").select(ignore.label)
+    click_button "Save"
+    expect(page).to have_text("Your analysis results will appear here")
+    expect(Analysis.last.words.pluck(:lemma)).to eq([ "猫" ])
+    expect(Word.exists?(lemma: "犬")).to be(false)
   end
 
   it "bulk assesses only unselected words and saves the resulting choices" do
@@ -127,6 +149,7 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(page).to have_no_css("dialog[open]")
     expect(cat_row.find("select").value).to eq(unknown.id.to_s)
 
+    find("#analysis_results tbody tr", text: "犬").find("select").select(known.label)
     click_button "Save"
     expect(page).to have_text("Your analysis results will appear here")
     expect(word.reload.analyses.count).to eq(3)

@@ -10,16 +10,16 @@ RSpec.describe "Word histories", type: :request do
       headers: { "Turbo-Frame" => "word_history" }
   end
 
-  it "shows all saved passages, dates, assessment totals, and unassessed encounters" do
+  it "shows all saved passages, dates, and assessment totals" do
     word = Word.create!(lemma: "猫", part_of_speech: "名詞")
     known = AssessmentChoice.create!(key: "known", position: 4)
     unknown = AssessmentChoice.create!(key: "unknown", position: 1)
-    [ [ "猫。猫。猫。", unknown ], [ "猫がいる", known ], [ "猫を見た", nil ] ].each_with_index do |(text, choice), index|
+    [ [ "猫。猫。猫。", unknown ], [ "猫がいる", known ], [ "猫を見た", known ] ].each_with_index do |(text, choice), index|
       analysis = Analysis.create!(text: text, created_at: Time.utc(2026, 10, 10 + index, 10))
       analysis.word_assessments.create!(word: word, assessment_choice: choice)
     end
     other = Word.create!(lemma: "猫", part_of_speech: "固有名詞")
-    Analysis.create!(text: "別の猫").word_assessments.create!(word: other)
+    Analysis.create!(text: "別の猫").word_assessments.create!(word: other, assessment_choice: known)
 
     get_history
 
@@ -30,7 +30,7 @@ RSpec.describe "Word histories", type: :request do
       Time.utc(2026, 10, 10, 10).iso8601, Time.utc(2026, 10, 12, 10).iso8601
     ])
     expect(document.css("[data-history-entry]").size).to eq(3)
-    expect(document.css(".assessment-totals").text.split.join(" ")).to include("Don't know yet: 1", "Know both: 1", "Unassessed: 1")
+    expect(document.css(".assessment-totals").text.split.join(" ")).to include("Don't know yet: 1", "Know both: 2")
     expect(response.body).to include("猫。猫。猫。", "猫がいる", "猫を見た")
     expect(response.body).not_to include("別の猫")
     expect(response.body).to include("current unsaved analysis is excluded")
@@ -45,12 +45,12 @@ RSpec.describe "Word histories", type: :request do
 
   it "renders Japanese dates and labels without missing translations" do
     word = Word.create!(lemma: "猫", part_of_speech: "名詞")
-    Analysis.create!(text: "猫").word_assessments.create!(word: word)
+    Analysis.create!(text: "猫").word_assessments.create!(word: word, assessment_choice: AssessmentChoice.create!(key: "known", position: 4))
 
     get_history(locale: "ja")
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("初めて出会った日時", "未評価")
+    expect(response.body).to include("初めて出会った日時", "読みも意味も知っている")
     expect(response.body).not_to include("translation_missing")
   end
 

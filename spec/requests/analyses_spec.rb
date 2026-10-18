@@ -153,6 +153,76 @@ RSpec.describe "Analyses", type: :request do
       expect(Analysis.last.words.pluck(:lemma)).to eq([ "犬" ])
     end
 
+
+    def assessment_attributes(lemma, choice_id)
+      {
+        word_attributes: { lemma: lemma, part_of_speech: "名詞", dictionary_reading: lemma },
+        assessment_choice_id: choice_id,
+        surfaces: [ lemma ]
+      }
+    end
+
+    def save_assessments(attributes)
+      post save_analysis_path,
+        params: { analysis: { text: "猫と犬と鳥", word_assessments_attributes: attributes } },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+    end
+
+    it "skips ignored new and existing words while preserving prior history" do
+      ignore = AssessmentChoice.create!(key: "ignore", position: 0)
+      known = AssessmentChoice.create!(key: "known", position: 4)
+      cat = Word.create!(lemma: "猫", part_of_speech: "名詞")
+      history = Analysis.create!(text: "猫").word_assessments.create!(word: cat, assessment_choice: known)
+
+      expect do
+        save_assessments({
+          "0" => assessment_attributes("猫", ignore.id),
+          "1" => assessment_attributes("犬", ignore.id),
+          "2" => assessment_attributes("鳥", known.id)
+        })
+      end.to change(WordAssessment, :count).by(1).and change(Word, :count).by(1)
+
+      expect(response).to redirect_to(new_analysis_path)
+      expect(Analysis.last.words.pluck(:lemma)).to eq([ "鳥" ])
+      expect(Word.exists?(lemma: "犬")).to be(false)
+      expect(history.reload.assessment_choice).to eq(known)
+      expect(cat.word_assessments.count).to eq(1)
+    end
+
+    it "allows all words to be ignored without saving words or assessments" do
+      ignore = AssessmentChoice.create!(key: "ignore", position: 0)
+
+      expect do
+        save_assessments({ "0" => assessment_attributes("猫", ignore.id) })
+      end.not_to change(WordAssessment, :count)
+
+      expect(response).to redirect_to(new_analysis_path)
+      expect(Word.count).to eq(0)
+      expect(Analysis.last.word_assessments).to be_empty
+    end
+
+    [ nil, "" ].each do |choice_id|
+      it "rejects a missing choice #{choice_id.inspect} without saving any part of the analysis" do
+        known = AssessmentChoice.create!(key: "known", position: 4)
+        ignore = AssessmentChoice.create!(key: "ignore", position: 0)
+
+        save_assessments({
+          "0" => assessment_attributes("猫", known.id),
+          "1" => assessment_attributes("犬", choice_id),
+          "2" => assessment_attributes("鳥", ignore.id)
+        })
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include('role="alert"', "Assessment choice")
+        document = Nokogiri::HTML(response.body)
+        expect(document.css("tbody select[required]").size).to eq(3)
+        expect(document.css("tbody select option[selected]").map { |option| option["value"] }).to include(known.id.to_s, ignore.id.to_s)
+        expect(Analysis.count).to eq(0)
+        expect(WordAssessment.count).to eq(0)
+        expect(Word.count).to eq(0)
+      end
+    end
+
     it "re-renders the results with validation errors when saving fails" do
       post save_analysis_path,
         params: {
