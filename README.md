@@ -92,6 +92,51 @@ The database role needs permission to create the development/test databases.
 The explicit seed command also initializes assessment choices on an existing
 database. Without `--skip-server`, setup starts the development processes itself.
 
+### Running the production image locally
+
+The root [Dockerfile](Dockerfile) builds the app with `RAILS_ENV=production`.
+Use [docker-compose.production.yml](docker-compose.production.yml) to run that
+image with a local PostgreSQL database without occupying the usual host ports:
+the app is available at <http://localhost:13000>, and PostgreSQL is published
+only on `127.0.0.1:15432`. Both ports can be changed with `LOCAL_APP_PORT` and
+`LOCAL_DATABASE_PORT`.
+
+Create a private `.env.production.local` file in the repository root with the
+master key from `config/master.key` and a strong, persistent database password:
+
+```dotenv
+RAILS_MASTER_KEY=your-rails-master-key
+KOTOBA_TRACE_DATABASE_PASSWORD=your-local-database-password
+```
+
+Keep this file private; it is ignored by Git. Build and start the containers:
+
+```sh
+docker compose --env-file .env.production.local -f docker-compose.production.yml up --build -d
+```
+
+To connect from the host, use PostgreSQL tools with host `127.0.0.1`, port
+`15432`, and user `kotoba_trace`. For example, back up the primary database:
+
+```sh
+pg_dump --host 127.0.0.1 --port 15432 --username kotoba_trace \
+  --format=custom --file "$HOME/kotoba_trace_production.dump" kotoba_trace_production
+```
+
+The command prompts for the database password. Store backups securely; they may
+contain sensitive application data.
+
+The application also uses separate production databases for Solid Cache, Solid
+Queue, and Solid Cable. To back up the entire local PostgreSQL cluster instead,
+run `pg_dumpall --host 127.0.0.1 --port 15432 --username kotoba_trace`.
+
+After changing application code, rebuild and replace the local production
+container with the same `docker compose ... up --build -d` command. This does
+not update any separately deployed production server; deploy those using the
+configured deployment workflow. The database and uploaded files persist in
+Docker volumes when containers are removed; avoid `docker compose down -v`
+unless you intend to delete that data.
+
 ### Local configuration
 
 | Variable | Purpose | Default |
