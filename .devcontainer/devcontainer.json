@@ -6,7 +6,7 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/rails/devcontainer/features/activestorage": {},
-    "ghcr.io/devcontainers/features/node:2.1": {},
+    "ghcr.io/devcontainers/features/node:2.1.1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {"moby":false},
     "ghcr.io/rails/devcontainer/features/postgres-client": {}
   },
@@ -16,7 +16,8 @@
     "SELENIUM_HOST": "selenium",
     "KAMAL_REGISTRY_PASSWORD": "$KAMAL_REGISTRY_PASSWORD",
     "DB_HOST": "postgres",
-    "ANKI_CONNECT_URL": "http://host.docker.internal:8765"
+    "ANKI_CONNECT_URL": "http://host.docker.internal:8765",
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -54,5 +55,5 @@
 
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "bin/setup --skip-server"
+  "postCreateCommand": "bin/setup --skip-server && mkdir -p /home/vscode/.codex && printf '[projects.\"/workspace\"]\\ntrust_level = \"trusted\"\\n' >> /home/vscode/.codex/config.toml"
 }

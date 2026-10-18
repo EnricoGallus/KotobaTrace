@@ -28,7 +28,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     networks:
-    - default
+      - default
 
   selenium:
     image: selenium/standalone-chromium

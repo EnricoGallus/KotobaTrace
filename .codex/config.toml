@@ -1,21 +1,7 @@
-# .codex/config.toml
-
-# -----------------------------------------------
-# Rails MCP
-# Runs inside the existing devcontainer
-# -----------------------------------------------
-
 [mcp_servers.rails]
-command = "docker"
-args = [
-  "exec",
-  "-i",
-  "-w",
-  "/workspaces/kotoba_trace",
-  "YOUR_DEVCONTAINER_NAME",
-  "rails-mcp-server",
-  "--single-project"
-]
+command = "rails-mcp-server"
+args = ["--single-project"]
+cwd = "/workspace"
 startup_timeout_sec = 30
 
 
@@ -39,13 +25,16 @@ startup_timeout_sec = 30
 [mcp_servers.postgres]
 command = "uvx"
 args = [
-  "--with",
-  "mcp<2",
+  "--python", "3.12",
+  "--managed-python",
+  "--with", "mcp<2",
   "postgres-mcp",
   "--access-mode=restricted"
 ]
-env_vars = ["DATABASE_URI"]
-startup_timeout_sec = 30
+startup_timeout_sec = 60
+
+[mcp_servers.postgres.env]
+DATABASE_URI = "postgresql://postgres:password@db:5432/kotoba_trace_development"
 
 
 # -----------------------------------------------
@@ -58,6 +47,7 @@ args = [
   "-y",
   "@modelcontextprotocol/server-sequential-thinking"
 ]
+startup_timeout_sec = 30
 
 
 # -----------------------------------------------
@@ -69,5 +59,7 @@ command = "npx"
 args = [
   "-y",
   "@modelcontextprotocol/server-filesystem",
-  "/Users/enrico/Projects/kotoba_trace"
+  "/workspace"
 ]
+cwd = "/workspace"
+startup_timeout_sec = 30

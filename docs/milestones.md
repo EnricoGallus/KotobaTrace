@@ -63,8 +63,7 @@ raw morphemes
     └──→ Japanese::GrammarExtractor    → grammar/expressions (later)
 ```
 
-There is no `Japanese::Tokenizer` class in the current design. Keep morphological
-analysis faithful to MeCab output. Learner-oriented grouping and filtering belong
+Keep morphological analysis faithful to MeCab output. Learner-oriented grouping and filtering belong
 to the vocabulary rules, while later contextual corrections belong above the
 analyzer. Grammar extraction must consume raw morphemes directly.
 
@@ -140,8 +139,20 @@ specs, including a reload and a later third saved passage.
   unknown assessments, repeated encounters, recency, and learner choices.
 - Distinguish a word absent from Anki from an existing card repeatedly missed in
   real reading. Anki membership does not imply knowledge.
-- Support marking known, ignoring, and selecting candidates for later study.
-  Add snoozing only if real use needs it.
+- Support marking known and selecting candidates for later study.
+- TODO: Treat Ignore as skipping a word in the current passage: do not save its
+  word/analysis link or assessment, or create a new word solely for that ignored
+  result. Keep prior saved history intact.
+- TODO: Add a persistent “Never suggest this word again” preference. “Dismiss”
+  refers to this same action, not a separate state. Suppressed words stay out of
+  the Study Inbox even after later encounters, while existing history remains.
+  Provide a way to review and undo this preference. This suppresses inbox
+  suggestions; it does not hide words from future passage analysis.
+- TODO: Add inbox search, difficulty filters, sorting, and server-side pagination.
+  Preserve search/filter/sort parameters across pages, reset to the first page
+  when the query changes, and update the inbox through a Turbo Frame. Evaluate
+  Pagy for pagination; start with Rails queries for basic search.
+- Add snoozing only if real use needs it.
 - Export approved candidates as TSV/CSV before implementing direct card creation.
   Include context where available; never automatically create cards for every
   unknown word.
@@ -150,6 +161,9 @@ specs, including a reload and a later third saved passage.
 
 After several study sessions, the inbox provides a useful shortlist and explains
 why each word appears. The learner controls which candidates are exported.
+“Never suggest this word again” survives reloads and subsequent encounters;
+restoring suggestions makes the word eligible under the normal ranking rules.
+Ignoring a word creates no new encounter or assessment for that passage.
 
 ## Checkpoint A — Use the Personal MVP
 
