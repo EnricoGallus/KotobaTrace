@@ -13,13 +13,35 @@ RSpec.describe Japanese::MorphologicalAnalyzer do
 
     it "normalizes missing feature values without dropping unknown words" do
       node = double(surface: "unknown", feature: "名詞,一般,*,*,*,*,*,*")
-      allow(node).to receive_messages(is_bos?: false, is_eos?: false)
+      allow(node).to receive_messages(is_bos?: false, is_eos?: false, is_unk?: true)
       mecab = double(enum_parse: [ node ])
       morpheme = described_class.new("unknown", mecab: mecab).call.first
+      expect(morpheme.unknown).to be(true)
       expect(morpheme.base_form).to eq("unknown")
       expect(morpheme.reading).to be_nil
       expect(morpheme.pos_subtype2).to be_nil
       expect(morpheme.conjugation_form).to be_nil
+    end
+
+    it "preserves character offsets across whitespace and repeated Japanese words" do
+      text = "  猫\n猫　犬\t猫"
+      morphemes = described_class.call(text)
+
+      expect(morphemes.map { |m| [ m.start_offset, m.end_offset ] }).to eq([
+        [ 2, 3 ], [ 4, 5 ], [ 5, 6 ], [ 6, 7 ], [ 8, 9 ]
+      ])
+      morphemes.each do |morpheme|
+        expect(text[morpheme.start_offset...morpheme.end_offset]).to eq(morpheme.surface)
+      end
+    end
+
+    it "parses quoted comma features without shifting lemma and reading fields" do
+      comma = described_class.call(",").fetch(0)
+
+      expect(comma.base_form).to eq(",")
+      expect(comma.reading).to eq(",")
+      expect(comma.part_of_speech).to eq("記号")
+      expect(comma.unknown).to be(false)
     end
 
     it "returns no tokens for empty text" do

@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libmecab2 libvips mecab mecab-ipadic-utf8 postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libmecab2 libvips mecab mecab-naist-jdic postgresql-client && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libmecab.so.2 /usr/local/lib/libmecab.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -27,6 +27,7 @@ ENV RAILS_ENV="production" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development test" \
     MECAB_PATH="/usr/local/lib/libmecab.so" \
+    MECAB_DICDIR="/var/lib/mecab/dic/naist-jdic" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so"
 
 # Throw-away build stage to reduce size of final image

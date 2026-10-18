@@ -7,6 +7,8 @@ module Japanese
       VocabularyRules::TimeExpression,
       VocabularyRules::NumberCounter,
       VocabularyRules::SuruVerb,
+      VocabularyRules::NounSuffix,
+      VocabularyRules::CompoundNoun,
       VocabularyRules::Verb,
       VocabularyRules::ContentWord
     ].freeze
@@ -21,12 +23,24 @@ module Japanese
     end
 
     def call
+      # Every rule sees only uninterrupted source text. This also protects
+      # existing honorific, counter and helper rules from crossing list entries.
+      @morphemes.slice_when { |left, right| left.end_offset != right.start_offset }
+        .flat_map { |run| extract_run(run) }
+    end
+
+    private
+
+    def extract_run(morphemes)
       candidates = []
       index = 0
-      while index < @morphemes.length
-        match = @rules.lazy.map { |rule| rule.call(@morphemes, index) }.find(&:itself)
+      while index < morphemes.length
+        match = @rules.lazy.map { |rule| rule.call(morphemes, index) }.find(&:itself)
         if match
-          candidates << build_candidate(match)
+          candidate = build_candidate(match)
+          candidates << VocabularyDisambiguator.call(
+            candidate, following: morphemes[index + match.morphemes.length]
+          )
           index += match.morphemes.length
         else
           index += 1
@@ -34,8 +48,6 @@ module Japanese
       end
       candidates
     end
-
-    private
 
     def build_candidate(match)
       VocabularyCandidate.new(

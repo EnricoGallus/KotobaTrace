@@ -81,6 +81,32 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(Word.exists?(lemma: "犬")).to be(false)
   end
 
+  it "groups the study list conservatively and saves complete vocabulary forms" do
+    known = AssessmentChoice.create!(key: "known", position: 4)
+    open_analysis
+    text = [
+      "採用", "残業代付く", "流行ってる", "気持ちの面", "流行りに乗れる",
+      "精神的", "鼠に", "かじる", "対策", "専業主婦", "家庭", "節約", "工夫", "実践",
+      "返却日", "意見交換", "間接的", "政治的"
+    ].join("\n")
+    submit_text(text)
+    perform_enqueued_jobs
+
+    expected_forms = %w[採用 残業代 付く 流行る 気持ち 面 流行り 乗る 精神的 鼠 かじる 対策 専業主婦 家庭 節約 工夫 実践 返却日 意見交換 間接的 政治的]
+    expect(page).to have_css("tbody tr", count: expected_forms.length)
+    expect(all("tbody tr td:nth-child(2)").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(find("tbody tr", text: "流行ってる").find("td:nth-child(3)").text).to eq("ハヤッテル")
+    expect(find("tbody tr", text: "政治的").find("td:nth-child(4)").text).to eq("形容動詞")
+
+    select known.label, from: "Set unassessed words to"
+    click_button "Apply"
+    click_button "Save"
+    expect(page).to have_text("Your analysis results will appear here")
+    expect(Analysis.last.text).to eq(text)
+    expect(Analysis.last.words.pluck(:lemma)).to match_array(expected_forms)
+    expect(Analysis.last.words.pluck(:dictionary_reading)).to all(be_nil)
+  end
+
   it "bulk assesses only unselected words and saves the resulting choices" do
     known = AssessmentChoice.create!(key: "known", position: 4)
     unknown = AssessmentChoice.create!(key: "unknown", position: 1)

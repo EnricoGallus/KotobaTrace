@@ -19,8 +19,7 @@ class AnalyzeTextJob < ApplicationJob
       candidate_groups.each do |(lemma, part_of_speech), word_candidates|
         word = existing_words[[ lemma, part_of_speech ]] || Word.new(
           lemma: lemma,
-          part_of_speech: part_of_speech,
-          dictionary_reading: word_candidates.first.reading
+          part_of_speech: part_of_speech
         )
         assessment = analysis.word_assessments.build(word: word)
         assessment.surfaces = word_candidates.map(&:surface).uniq

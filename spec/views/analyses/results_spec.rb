@@ -13,6 +13,7 @@ RSpec.describe "analyses/_results", type: :view do
     cells = Nokogiri::HTML(rendered).css("tbody tr td")
     expect(cells[2].text.strip).to eq("キサイサレタ")
     expect(word.dictionary_reading).to eq("キサイサ")
+    expect(Nokogiri::HTML(rendered).at_css('input[name$="[dictionary_reading]"]')).to be_nil
   end
 
   it "does not fall back to a partial saved reading when the source reading is unknown" do
@@ -21,6 +22,17 @@ RSpec.describe "analyses/_results", type: :view do
     assessment = analysis.word_assessments.build(word: word)
     assessment.surfaces = [ "記載された" ]
     assessment.surface_readings = []
+
+    render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
+
+    expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
+  end
+
+  it "does not present a saved dictionary reading as an encountered reading when none was supplied" do
+    analysis = Analysis.new(text: "記載された")
+    analysis.word_assessments.build(
+      word: Word.new(lemma: "記載する", part_of_speech: "動詞", dictionary_reading: "キサイスル")
+    )
 
     render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
 

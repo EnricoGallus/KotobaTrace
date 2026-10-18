@@ -10,6 +10,8 @@ module Japanese
         return unless helper&.pos?("動詞") && helper.base_form == "くださる"
 
         verb_match = Verb.call(morphemes, index + 1)
+        return unless verb_match
+
         VocabularyMatch.new(
           morphemes: [ prefix, *verb_match.morphemes ],
           base_form: verb.base_form, part_of_speech: "動詞", kind: :vocabulary

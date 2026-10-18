@@ -2,15 +2,20 @@ require "spec_helper"
 require_relative "../../../app/services/japanese/morpheme"
 require_relative "../../../app/services/japanese/vocabulary_candidate"
 require_relative "../../../app/services/japanese/vocabulary_match"
+require_relative "../../../app/services/japanese/vocabulary_lexicon"
+require_relative "../../../app/services/japanese/vocabulary_disambiguator"
 Dir[File.expand_path("../../../app/services/japanese/vocabulary_rules/*.rb", __dir__)].sort.each { |path| require path }
 require_relative "../../../app/services/japanese/vocabulary_extractor"
 
 RSpec.describe Japanese::VocabularyExtractor do
   def morpheme(surface, base_form: surface, reading: nil, pos: "名詞", subtype1: nil, subtype2: nil)
+    start_offset = @source_offset || 0
+    @source_offset = start_offset + surface.length
     Japanese::Morpheme.new(
       surface: surface, base_form: base_form, reading: reading, part_of_speech: pos,
       pos_subtype1: subtype1, pos_subtype2: subtype2, pos_subtype3: nil,
-      conjugation_type: nil, conjugation_form: nil, position: 0
+      conjugation_type: nil, conjugation_form: nil, position: 0,
+      start_offset: start_offset, end_offset: @source_offset, unknown: false
     )
   end
 
@@ -157,8 +162,9 @@ RSpec.describe Japanese::VocabularyExtractor do
 
   it "preserves repeated occurrences with distinct source positions" do
     first = morpheme("受付").with(position: 0)
+    separator = morpheme("と", pos: "助詞").with(position: 1)
     second = morpheme("受付").with(position: 2)
-    parts = [ first, morpheme("と", pos: "助詞").with(position: 1), second ]
+    parts = [ first, separator, second ]
     candidates = described_class.call(parts)
     expect(candidates.map(&:surface)).to eq(%w[受付 受付])
     expect(candidates.map { |candidate| candidate.morphemes.first.position }).to eq([ 0, 2 ])

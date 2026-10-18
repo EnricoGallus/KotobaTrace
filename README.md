@@ -72,8 +72,8 @@ watchers. Local Anki access needs the configuration below.
 
 Install the pinned Ruby/Node versions, Bundler, Yarn Classic, PostgreSQL and its
 client development libraries, and MeCab with its shared library and a compatible
-Japanese dictionary. The analyzer expects IPADIC-style feature columns; the dev
-container installs `mecab-naist-jdic`, while CI uses `mecab-ipadic-utf8`.
+Japanese dictionary. The analyzer expects IPADIC-style feature columns; development, CI,
+and production install `mecab-naist-jdic`.
 
 For a locally running PostgreSQL server, set connection values for your local
 role before setup:
@@ -149,6 +149,7 @@ unless you intend to delete that data.
 | `ANKI_DECK` | Anki deck scanned for vocabulary (blank disables lookup) | `2026 JLPT N2::新完全マスターN2 - 語彙` |
 | `ANKI_EXPRESSION_FIELD` | Note field containing vocabulary expressions | `Expression` |
 | `ANKI_CONNECT_URL` | AnkiConnect endpoint reachable from Rails | `http://127.0.0.1:8765` |
+| `MECAB_DICDIR` | Explicit system dictionary directory; container builds and CI select NAIST-jdic | System default outside containers |
 | `MECAB_PATH` | Explicit path to the MeCab shared library, if Natto cannot discover it | Unset |
 
 See [config/database.yml](config/database.yml) for database names and environment
@@ -230,6 +231,13 @@ their source morphemes, including separate repeated occurrences through extracti
 The current save flow persists one assessment per word per analysis; individual
 repetitions are not counted or stored separately. The saved word/analysis links
 provide passage encounter counts and the full original passages for history.
+
+Grouping requires uninterrupted source spans plus either a grammatical pattern
+(verb helpers and approved suffixes) or an explicit compound lexicon entry.
+Unknown noun sequences remain separate. See [Vocabulary grouping](docs/vocabulary-grouping.md)
+for supported patterns, lexical mappings, and how to extend them safely.
+Encountered readings remain transient and do not initialize `dictionary_reading`;
+that field is reserved for separately established dictionary readings.
 
 Future grammar extraction will branch directly from raw morphemes, since it needs
 particles and auxiliaries that vocabulary extraction can group or omit.

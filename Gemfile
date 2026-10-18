@@ -72,6 +72,7 @@ group :test do
 end
 
 gem "natto", "~> 1.2"
+gem "csv", "~> 3.3"
 gem "anki_connect", "~> 0.2.0"
 
 gem "tailwindcss-rails", "~> 4.6"

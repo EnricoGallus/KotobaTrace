@@ -5,6 +5,9 @@ on:
   push:
     branches: [ main ]
 
+env:
+  MECAB_DICDIR: /var/lib/mecab/dic/naist-jdic
+
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
@@ -84,7 +87,7 @@ jobs:
       - name: Install MeCab
         run: |
           sudo apt-get update
-          sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+          sudo apt-get install -y mecab libmecab-dev mecab-naist-jdic
 
           libmecab_path="$(dpkg -L libmecab-dev | awk '/\/libmecab\.so$/ {print; exit}')"
           test -f "$libmecab_path"
@@ -119,7 +122,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips node-gyp mecab libmecab-dev mecab-ipadic-utf8
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips node-gyp mecab libmecab-dev mecab-naist-jdic
 
       - name: Checkout code
         uses: actions/checkout@v7

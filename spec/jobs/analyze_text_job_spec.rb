@@ -69,6 +69,26 @@ RSpec.describe AnalyzeTextJob, type: :job do
       expect(analysis.reload.words.pluck(:lemma)).to include("猫")
     end
 
+    it "keeps encountered readings transient instead of saving them as dictionary readings" do
+      allow(Flashcards::VocabularyLookup).to receive(:call).and_return(Flashcards::VocabularyCollection.new)
+      analysis = nil
+      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
+        analysis = options.fetch(:locals).fetch(:analysis)
+      end
+
+      described_class.perform_now("流行ってる。流行りに乗れる。", "stream-123")
+      assessments = analysis.word_assessments
+      expect(assessments.map { |a| [ a.word.lemma, a.word.part_of_speech ] }).to eq([
+        [ "流行る", "動詞" ], [ "流行り", "名詞" ], [ "乗る", "動詞" ]
+      ])
+      expect(assessments.map(&:surface_readings)).to eq([ [ "ハヤッテル" ], [ "ハヤリ" ], [ "ノレル" ] ])
+      expect(assessments.map { |a| a.word.dictionary_reading }).to all(be_nil)
+      choice = AssessmentChoice.create!(key: "known", position: 4)
+      assessments.each { |assessment| assessment.assessment_choice = choice }
+      analysis.save!
+      expect(analysis.reload.words.pluck(:dictionary_reading)).to all(be_nil)
+    end
+
     it "broadcasts a localized retryable failure with the request ID" do
       allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_raise(StandardError, "Internal details")
 

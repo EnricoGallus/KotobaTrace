@@ -82,7 +82,7 @@
               </button>
             </td>
             <td lang="ja" class="text-base-content/70">
-              <% readings = (assessment.surface_readings || [ word&.dictionary_reading ]).reject(&:blank?) %>
+              <% readings = assessment.surface_readings.to_a.reject(&:blank?) %>
               <%= readings.join(", ") %>
               <%= hidden_field_tag "#{field_name}[surface_readings][]", "" %>
               <% readings.each do |reading| %>
@@ -104,7 +104,6 @@
             <td>
               <%= hidden_field_tag "#{word_field_name}[lemma]", word&.lemma %>
               <%= hidden_field_tag "#{word_field_name}[part_of_speech]", word&.part_of_speech %>
-              <%= hidden_field_tag "#{word_field_name}[dictionary_reading]", word&.dictionary_reading %>
               <%= select_tag "#{field_name}[assessment_choice_id]",
                     options_from_collection_for_select(assessment_choices, :id, :label, assessment.assessment_choice_id),
                     required: true,

@@ -84,9 +84,11 @@ analyzer. Grammar extraction must consume raw morphemes directly.
   localized failure/retry feedback during real use. Progress now follows terminal
   job results, with request IDs preventing stale updates. Browser specs cover the
   complete workflow and optional flashcard outage notices.
-- Clarify encountered-form readings versus dictionary-form readings. A reading
-  assembled from inflected morphemes must not silently become an authoritative
-  dictionary reading for a normalized word.
+- Continue reviewing context-dependent readings. Encountered readings now remain
+  transient and do not initialize dictionary readings. Source-aware suffix,
+  compound and contracted-verb grouping has regression coverage; see
+  [Vocabulary grouping](vocabulary-grouping.md) for its evidence requirements,
+  supported lexical entries and extension process.
 
 ### Acceptance criteria
 
