@@ -12,3 +12,13 @@
   choice = AssessmentChoice.find_or_initialize_by(key: key)
   choice.update!(position: position)
 end
+
+[
+  [ "ignore", 0 ],
+  [ "unknown", 1 ],
+  [ "partly_understood", 2 ],
+  [ "understood", 3 ]
+].each do |key, position|
+  choice = GrammarAssessmentChoice.find_or_initialize_by(key: key)
+  choice.update!(position: position)
+end

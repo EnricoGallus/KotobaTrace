@@ -30,6 +30,7 @@ services:
     environment:
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:?Set RAILS_MASTER_KEY in .env.production.local}
       KOTOBA_TRACE_DATABASE_PASSWORD: ${KOTOBA_TRACE_DATABASE_PASSWORD:?Set KOTOBA_TRACE_DATABASE_PASSWORD in .env.production.local}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY in .env.production.local}
       SOLID_QUEUE_IN_PUMA: "true"
     ports:
       - "127.0.0.1:${LOCAL_APP_PORT:-13000}:80"

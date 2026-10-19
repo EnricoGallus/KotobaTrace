@@ -11,11 +11,18 @@ ja:
     reading_only: 読みだけ知っている
     meaning_only: 意味だけ知っている
     known: 読みも意味も知っている
+  grammar_assessment_choices:
+    ignore: スキップ
+    unknown: まだ知らない
+    partly_understood: 少しわかる
+    understood: わかる
   analyses:
     table_scroll_hint: 横にスクロールすると、すべての列を確認できます。
     introduction: 出会った日本語を、自分の語彙に。文章を貼り付けて、語彙を確認し、学習の履歴を残しましょう。
-    results_title: 語彙
-    results_hint: 基本形を選ぶと保存済みの履歴を確認できます。現在の評価はそのまま残ります。
+    results_title: 解析結果
+    vocabulary_title: 語彙
+    grammar_title: 文法
+    results_hint: 語彙と文法を確認して評価し、保存済みの単語履歴を確認できます。
     error_title: 解析を確認してください
     no_vocabulary_title: 学習対象の語彙が見つかりませんでした
     text_label: 解析するテキスト
@@ -41,6 +48,7 @@ ja:
       flashcards: 単語カード
       passages: 過去の文章数
       assessment: 評価
+    grammar_assessment_label: 文法の評価
     flashcard_status:
       included: 単語カードに登録済み
       not_included: 単語カードに未登録

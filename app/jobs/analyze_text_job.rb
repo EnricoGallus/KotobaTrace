@@ -5,26 +5,12 @@ class AnalyzeTextJob < ApplicationJob
     locale = I18n.available_locales.find { |available| available.to_s == locale.to_s } || I18n.default_locale
 
     I18n.with_locale(locale) do
-      morphemes = Japanese::MorphologicalAnalyzer.call(text)
-      candidates = Japanese::VocabularyExtractor.call(morphemes)
-        .select { |candidate| candidate.kind == :vocabulary }
-
+      analysis = Japanese::TextAnalyzer.call(text)
       collection = Flashcards::VocabularyLookup.call
-
-      analysis = Analysis.new(text: text)
-      candidate_groups = candidates.group_by { |candidate| [ candidate.base_form, candidate.part_of_speech ] }
-      existing_words = Word.where(lemma: candidate_groups.keys.map(&:first).uniq)
-        .index_by { |word| [ word.lemma, word.part_of_speech ] }
-
-      candidate_groups.each do |(lemma, part_of_speech), word_candidates|
-        word = existing_words[[ lemma, part_of_speech ]] || Word.new(
-          lemma: lemma,
-          part_of_speech: part_of_speech
-        )
-        assessment = analysis.word_assessments.build(word: word)
-        assessment.surfaces = word_candidates.map(&:surface).uniq
-        assessment.surface_readings = word_candidates.map(&:reading).compact.uniq
-        assessment.in_flashcards = collection.include?(lemma) if collection.checked?
+      if collection.checked?
+        analysis.word_assessments.each do |assessment|
+          assessment.in_flashcards = collection.include?(assessment.word.lemma)
+        end
       end
 
       Turbo::StreamsChannel.broadcast_update_to(
@@ -34,12 +20,13 @@ class AnalyzeTextJob < ApplicationJob
         locals: {
           analysis: analysis,
           assessment_choices: AssessmentChoice.order(:position),
+          grammar_assessment_choices: GrammarAssessmentChoice.order(:position),
           request_id: request_id,
           flashcards_unavailable: collection.unavailable?
         }
       )
     rescue StandardError => error
-      Rails.logger.error("Analysis failed (#{error.class})")
+      Rails.logger.error("Analysis failed request_id=#{request_id}\n#{error.full_message}")
       Turbo::StreamsChannel.broadcast_update_to(
         stream_key,
         target: "analysis_results",

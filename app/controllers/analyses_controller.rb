@@ -37,7 +37,8 @@ class AnalysesController < ApplicationController
         partial: "analyses/results",
         locals: {
           analysis: @analysis,
-          assessment_choices: AssessmentChoice.order(:position)
+          assessment_choices: AssessmentChoice.order(:position),
+          grammar_assessment_choices: GrammarAssessmentChoice.order(:position)
         }
       ), status: :unprocessable_entity
     end
@@ -62,6 +63,9 @@ class AnalysesController < ApplicationController
         { surfaces: [] },
         { surface_readings: [] },
         { word_attributes: %i[lemma part_of_speech dictionary_reading] }
+      ],
+      grammar_assessments_attributes: %i[
+        grammar_assessment_choice_id pattern meaning explanation example
       ]
     )
   end

@@ -18,8 +18,13 @@ Implemented foundations:
 - Rails 8.1, Ruby 4, PostgreSQL, Hotwire, esbuild, Tailwind CSS/DaisyUI, and RSpec.
 - Japanese text input, background analysis, Turbo Stream results, and Stimulus
   submission controls, with English and Japanese UI translations.
+- `Japanese::TextAnalyzer`, using RubyLLM with a Schematist schema to produce
+  grouped vocabulary assessments and grammar assessments with source examples,
+  meanings, and contextual explanations.
 - `Japanese::MorphologicalAnalyzer`, which wraps MeCab/Natto and returns raw
-  `Japanese::Morpheme` objects with morphological metadata and sequence positions.
+  `Japanese::Morpheme` objects with morphological metadata and sequence positions;
+  this deterministic pipeline remains available but is separate from the current
+  user-facing analyzer.
 - `Japanese::VocabularyExtractor`, with ordered rules for names/honorifics,
   numbers/counters, time expressions, suru verbs, verbs, and content words.
 - Vocabulary candidates retaining the morphemes they came from; the results UI
@@ -30,7 +35,8 @@ Implemented foundations:
   using `Anki::VocabularyIndex` for Anki and an empty, unchecked collection on failure.
   One provider is selected via environment configuration.
 - Explicit saving of `Analysis`, reusable `Word` records, and `WordAssessment`
-  records linked to configurable `AssessmentChoice` records.
+  records linked to vocabulary choices, plus `GrammarAssessment` records linked
+  to grammar-specific choices.
 - One encounter per word per saved passage, including prior saved data; repeated
   appearances within a passage do not increment history.
 - A prior-passage count in results and an in-place word-history dialog with dates,
@@ -48,24 +54,23 @@ Important gaps:
   has one assessment per word per analysis, without individual occurrence
   positions or within-passage counts, by design. The original passage is saved;
   displayed surfaces/readings and flashcard membership remain transient.
-- A Study Inbox, dictionary meanings, learner corrections, grammar tracking, and
-  accounts are not implemented. Current history belongs to the single-user app.
+- A Study Inbox, dictionary meanings, learner corrections, grammar history views,
+  and accounts are not implemented. Current history belongs to the single-user app.
 
 ## Analysis boundary for all milestones
 
 ```text
 Japanese text
     ↓
-Japanese::MorphologicalAnalyzer
+Japanese::TextAnalyzer
     ↓
-raw morphemes
-    ├──→ Japanese::VocabularyExtractor → vocabulary candidates
-    └──→ Japanese::GrammarExtractor    → grammar/expressions (later)
+RubyLLM + Schematist structured response
+    ├──→ grouped vocabulary → WordAssessment
+    └──→ grammar constructs → GrammarAssessment
 ```
 
-Keep morphological analysis faithful to MeCab output. Learner-oriented grouping and filtering belong
-to the vocabulary rules, while later contextual corrections belong above the
-analyzer. Grammar extraction must consume raw morphemes directly.
+The local morphological analyzer and vocabulary rules remain independent,
+testable services. Do not treat them as the current user-facing analysis path.
 
 ## Milestone 1 — Make the Existing Analysis Workflow Reliable
 
@@ -181,8 +186,8 @@ Record:
 The personal MVP is the working loop:
 
 ```text
-paste Japanese → morphological analysis → vocabulary extraction
-    → assess vocabulary → save encounters → revisit recurring difficulty
+paste Japanese → AI vocabulary and grammar extraction
+    → assess results → save encounters → revisit recurring difficulty
 ```
 
 Anki and dictionary enrichment can improve this loop, but must not be required
@@ -201,21 +206,19 @@ history without repeatedly switching between a detached table and the source.
 
 ## Milestone 5 — Grammar Tracking MVP
 
-**Status: planned, after the vocabulary workflow is useful.**
+**Status: initial AI-assisted extraction and assessment are implemented; real-use
+accuracy evaluation and correction tools remain.**
 
-Start with manual recording of a small, curated set of N2 grammar patterns and
-learner difficulty states. Add deterministic detection only for patterns that can
-be matched reliably.
-
-Implement a future `Japanese::GrammarExtractor` against raw morphemes, alongside
-vocabulary extraction. Keep grammar patterns, occurrences, and learning history
-separate from vocabulary concepts. Expressions such as `〜までに`, `〜ていく`,
-and `お〜ください` must remain accessible even when vocabulary rules group or
-hide their component morphemes.
+`Japanese::TextAnalyzer` extracts passage-grounded grammar constructs alongside
+vocabulary. Each `GrammarAssessment` stores its pattern, source example, meaning,
+explanation, and learner choice separately from vocabulary concepts. Validate
+the extraction against real study passages and add correction or manual-entry
+support if actual use requires it.
 
 **Acceptance criteria:** the learner can identify which grammar patterns recur
-in their material and which remain difficult. Manual marking is acceptable;
-unrestricted automatic grammar understanding is outside this milestone.
+in their material and which remain difficult. Explanations and examples must be
+reviewable against the original text; unrestricted automatic grammar understanding
+is outside this milestone.
 
 ## Milestone 6 — Optional Dictionary Enrichment and Search
 

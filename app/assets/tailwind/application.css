@@ -201,6 +201,7 @@
   .results-heading { padding: 1.5rem 1.5rem 0; }
   .table-scroll-hint { display: none; }
   .results-heading h2, .empty-state h2 { font-size: 1.3rem; }
+  .results-subheading { margin: 0 1.5rem 1rem; font-size: 1.15rem; }
   .results-heading p, .empty-state p { margin-top: 0.4rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); font-size: 0.9rem; }
   .assessment-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; padding: 1rem 1.5rem 1.5rem; }
   .assessment-toolbar .label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; }
@@ -212,6 +213,17 @@
   .vocabulary-table select { min-width: 12rem; }
   .membership-unchecked { font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); white-space: nowrap; }
   .results-footer { display: flex; justify-content: flex-end; padding: 1rem 1.5rem; }
+  .grammar-results { padding: 1.5rem; }
+  .grammar-results h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+  .grammar-assessment-list { display: grid; gap: 0.75rem; padding: 0; list-style: none; }
+  .grammar-assessment { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: 0.7rem; }
+  .grammar-assessment-content { flex: 1 1 22rem; min-width: 0; }
+  .grammar-assessment-content h4 { font-size: 1.1rem; }
+  .grammar-assessment-content p { margin-top: 0.35rem; font-size: 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .grammar-example { color: var(--color-primary); }
+  .grammar-assessment-choice { flex: 0 1 14rem; align-self: center; }
+  .grammar-assessment-choice .label { display: block; margin-bottom: 0.35rem; font-size: 0.8rem; }
+  .grammar-assessment-choice select { width: 100%; }
   .empty-state { padding: 1.5rem; }
   .ui-notice {
     display: flex;

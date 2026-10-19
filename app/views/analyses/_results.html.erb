@@ -2,7 +2,7 @@
   <% if local_assigns[:flashcards_unavailable] %>
     <%= render "shared/notice", tone: "warning", title: t("word_history.flashcards_unavailable_title"), message: t("analyses.flashcards_unavailable") %>
   <% end %>
-  <% if analysis.word_assessments.empty? %>
+  <% if analysis.word_assessments.empty? && analysis.grammar_assessments.empty? %>
     <div class="empty-state ui-panel" role="status">
       <h2><%= t("analyses.no_vocabulary_title") %></h2>
       <p><%= t("analyses.no_vocabulary") %></p>
@@ -21,6 +21,9 @@
     <% errors.concat(assessment.errors.full_messages) %>
     <% errors.concat(assessment.word&.errors&.full_messages || []) %>
   <% end %>
+  <% analysis.grammar_assessments.each do |assessment| %>
+    <% errors.concat(assessment.errors.full_messages) %>
+  <% end %>
   <% if errors.any? %>
     <div class="ui-notice ui-notice--error" role="alert">
       <ul>
@@ -31,6 +34,7 @@
     </div>
   <% end %>
 
+  <% if analysis.word_assessments.any? %>
   <div class="assessment-toolbar">
     <div>
       <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
@@ -44,7 +48,10 @@
       <%= t("analyses.apply_assessment") %>
     </button>
   </div>
+  <% end %>
 
+  <% if analysis.word_assessments.any? %>
+  <h3 class="results-subheading"><%= t("analyses.vocabulary_title") %></h3>
   <% passage_counts = saved_passage_counts(analysis) %>
   <div class="vocabulary-scroll" tabindex="0" role="region" aria-label="<%= t("analyses.results_title") %>">
     <table class="table vocabulary-table">
@@ -117,6 +124,38 @@
       </tbody>
     </table>
   </div>
+  <% end %>
+
+  <% if analysis.grammar_assessments.any? %>
+    <section class="grammar-results" aria-labelledby="grammar-results-title">
+      <h3 id="grammar-results-title"><%= t("analyses.grammar_title") %></h3>
+      <ul class="grammar-assessment-list">
+        <% analysis.grammar_assessments.each_with_index do |assessment, index| %>
+          <% field_name = "analysis[grammar_assessments_attributes][#{index}]" %>
+          <li class="grammar-assessment">
+            <div class="grammar-assessment-content">
+              <h4 lang="ja"><%= assessment.pattern %></h4>
+              <p class="grammar-example" lang="ja"><%= assessment.example %></p>
+              <p><strong><%= assessment.meaning %></strong></p>
+              <p><%= assessment.explanation %></p>
+            </div>
+            <div class="grammar-assessment-choice">
+              <%= hidden_field_tag "#{field_name}[pattern]", assessment.pattern %>
+              <%= hidden_field_tag "#{field_name}[meaning]", assessment.meaning %>
+              <%= hidden_field_tag "#{field_name}[explanation]", assessment.explanation %>
+              <%= hidden_field_tag "#{field_name}[example]", assessment.example %>
+              <%= label_tag "#{field_name}[grammar_assessment_choice_id]", t("analyses.grammar_assessment_label"), class: "label" %>
+              <%= select_tag "#{field_name}[grammar_assessment_choice_id]",
+                    options_from_collection_for_select(grammar_assessment_choices, :id, :label, assessment.grammar_assessment_choice_id),
+                    required: true,
+                    prompt: t("analyses.assessment_prompt"),
+                    class: "select select-bordered select-sm" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
 
   <div class="results-footer">
     <%= form.submit t("analyses.save"), class: "btn btn-primary" %>

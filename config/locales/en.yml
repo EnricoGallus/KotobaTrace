@@ -11,11 +11,18 @@ en:
     reading_only: Know the reading only
     meaning_only: Know the meaning only
     known: Know both
+  grammar_assessment_choices:
+    ignore: Ignore
+    unknown: Don't know this pattern yet
+    partly_understood: Partly understand
+    understood: Understand
   analyses:
     table_scroll_hint: Swipe or scroll sideways to see all columns.
     introduction: Learn the Japanese you encounter. Paste, review, and build your vocabulary history.
-    results_title: Vocabulary
-    results_hint: Select a base form to explore its saved history. Your current selections stay here.
+    results_title: Analysis results
+    vocabulary_title: Vocabulary
+    grammar_title: Grammar
+    results_hint: Review vocabulary and grammar, assess what you know, and explore saved word history.
     error_title: Analysis needs your attention
     no_vocabulary_title: No study vocabulary found
     text_label: Text to analyze
@@ -41,6 +48,7 @@ en:
       flashcards: Flashcards
       passages: Prior passages
       assessment: Assessment
+    grammar_assessment_label: Grammar assessment
     flashcard_status:
       included: In flashcards
       not_included: Not in flashcards

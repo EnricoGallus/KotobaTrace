@@ -19,6 +19,7 @@ RSpec.describe "Analysis workflow", type: :system do
     end
 
     clear_enqueued_jobs
+    allow(Japanese::TextAnalyzer).to receive(:call) { |text| deterministic_analysis(text) }
     allow(Flashcards::VocabularyLookup).to receive(:call).and_return(
       Flashcards::VocabularyCollection.new(unavailable: true)
     )
@@ -37,6 +38,24 @@ RSpec.describe "Analysis workflow", type: :system do
     # Turbo releases the submit button after the enqueue response, while our
     # fieldset stays disabled until the background job completes.
     expect(page).to have_css('form[aria-busy="true"] input[type="submit"]:not([disabled])')
+  end
+
+  def deterministic_analysis(text)
+    candidates = Japanese::VocabularyExtractor.call(Japanese::MorphologicalAnalyzer.call(text))
+      .select { |candidate| candidate.kind == :vocabulary }
+    groups = candidates.group_by { |candidate| [ candidate.base_form, candidate.part_of_speech ] }
+    words = Word.where(lemma: groups.keys.map(&:first).uniq)
+      .index_by { |word| [ word.lemma, word.part_of_speech ] }
+    analysis = Analysis.new(text: text)
+
+    groups.each do |(lemma, part_of_speech), word_candidates|
+      word = words[[ lemma, part_of_speech ]] || Word.new(lemma: lemma, part_of_speech: part_of_speech)
+      assessment = analysis.word_assessments.build(word: word)
+      assessment.surfaces = word_candidates.map(&:surface).uniq
+      assessment.surface_readings = word_candidates.map(&:reading).compact.uniq
+    end
+
+    analysis
   end
 
   it "keeps progress active after enqueueing, then allows assessment and saving" do
@@ -243,6 +262,28 @@ RSpec.describe "Analysis workflow", type: :system do
       within("dialog[open]") { click_button "Close" }
       expect(find("#analysis_results tbody tr", text: "猫").find("select").value).to eq(known.id.to_s)
     end
+  end
+
+  it "restores the form when the completion broadcast is lost" do
+    open_analysis
+    page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-timeout-value', '1000')")
+    submit_text("猫")
+
+    expect(page).to have_text("Retry analysis")
+    expect(page).to have_field("text", with: "猫", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_no_css('[data-analyze-text-target="progress"]', visible: true)
+  end
+
+  it "allows retrying when the stream subscription is disconnected" do
+    open_analysis
+    page.execute_script("document.querySelector('turbo-cable-stream-source').remove()")
+    fill_in "text", with: "猫"
+    click_button "Analyze"
+
+    expect(page).to have_text("Retry analysis")
+    expect(page).to have_field("text", with: "猫", disabled: false)
+    expect(enqueued_jobs).to be_empty
   end
 
   it "recovers from job failure using the same text and ignores stale results" do

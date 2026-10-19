@@ -2,11 +2,23 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "completion", "bulkAssessment", "assessment"]
-  static values = { progressLabel: String }
+  static values = { progressLabel: String, timeout: { type: Number, default: 180000 } }
+
+  disconnect() {
+    clearTimeout(this.completionTimeout)
+  }
 
   prepare(event) {
     if (this.pending) {
       event.preventDefault()
+      return
+    }
+
+    // Broadcasts sent before the subscription connects are lost.
+    if (!this.element.querySelector("turbo-cable-stream-source[connected]")) {
+      event.preventDefault()
+      this.pending = true
+      this.requestFailed()
       return
     }
 
@@ -19,6 +31,7 @@ export default class extends Controller {
     this.pending = true
     this.submitLabel = this.submitTarget.value
     this.showProgress()
+    this.completionTimeout = setTimeout(() => this.requestFailed(), this.timeoutValue)
   }
 
   submissionFinished(event) {
@@ -65,6 +78,7 @@ export default class extends Controller {
   }
 
   finish() {
+    clearTimeout(this.completionTimeout)
     this.pending = false
     this.controlsTarget.disabled = false
     this.formTarget.setAttribute("aria-busy", "false")

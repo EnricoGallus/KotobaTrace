@@ -153,6 +153,38 @@ RSpec.describe "Analyses", type: :request do
       expect(Analysis.last.words.pluck(:lemma)).to eq([ "犬" ])
     end
 
+    it "saves nested grammar assessments with their assessment choice" do
+      choice = GrammarAssessmentChoice.create!(key: "understood", position: 3)
+
+      post save_analysis_path,
+        params: {
+          analysis: {
+            text: "雨が降っている",
+            grammar_assessments_attributes: {
+              "0" => {
+                pattern: "〜ている",
+                meaning: "ongoing action",
+                explanation: "Describes an action in progress.",
+                example: "降っている",
+                grammar_assessment_choice_id: choice.id
+              }
+            }
+          }
+        },
+        headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+      grammar_assessment = Analysis.last.grammar_assessments.sole
+      expect(response).to redirect_to(new_analysis_path)
+      expect(grammar_assessment).to have_attributes(
+        pattern: "〜ている",
+        meaning: "ongoing action",
+        explanation: "Describes an action in progress.",
+        example: "降っている",
+        grammar_assessment_choice: choice
+      )
+      expect(grammar_assessment.assessed_at).to be_present
+    end
+
 
     def assessment_attributes(lemma, choice_id)
       {

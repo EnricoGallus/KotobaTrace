@@ -12,25 +12,27 @@ that helps you choose what to study next, especially words you repeatedly miss.
 KotobaTrace is an early, local-development application. The current workflow is:
 
 1. Paste Japanese text and select **Analyze**.
-2. Review encountered forms, normalized forms, readings, parts of speech, and
-   local Anki membership.
-3. Choose Ignore, Unknown, Reading only, Meaning only, or Known for vocabulary.
+2. Review vocabulary, grammar patterns, encountered forms, readings, and local
+   Anki membership.
+3. Choose a vocabulary assessment, and rate grammar as Ignore, Don't know,
+   Partly understand, or Understand.
 4. Save the analysis and assessments.
 
 Analysis runs as a background job and updates the results through Turbo Streams.
 Progress remains active until the job finishes. Blank input is rejected, failures
 keep the original text with a retry action, and empty results explain what to try.
 A flashcard lookup failure shows an informational notice without blocking saving.
-Results group vocabulary by normalized form and part of speech.
+The analysis uses Gemini through RubyLLM and returns schema-structured vocabulary
+and grammar results. Results group vocabulary by normalized form and part of speech.
 
 Results show how many saved passages contained each word. Click its base form
 for a dialog with first/last encounter dates, assessment totals, every saved
 assessment and passage, and available flashcard note details. The current draft
 is excluded from history. Repetitions within one passage count once.
 
-A Study Inbox, dictionary meanings, grammar tracking, and user accounts are planned. Current
-results include analyzer-derived readings, which can reflect encountered forms
-rather than dictionary forms. Automatic Japanese analysis can make mistakes.
+A Study Inbox, dictionary meanings, and user accounts are planned. Vocabulary
+readings reflect encountered forms rather than dictionary forms. AI-generated
+vocabulary and grammar results can make mistakes.
 
 Flashcard enrichment is optional and uses one provider at a time. Anki is the
 current provider; unavailable connections return an empty, unchecked collection
@@ -42,7 +44,8 @@ in the configured deck; it does not mean the learner knows the word.
 - Ruby 4 / Rails 8.1 / PostgreSQL
 - Server-rendered views, Turbo Streams, and Stimulus
 - Tailwind CSS, DaisyUI, and esbuild
-- MeCab via Natto for morphological analysis
+- RubyLLM with Gemini for vocabulary and grammar analysis
+- MeCab via Natto for the separately available local morphological analysis services
 - AnkiConnect for the current local vocabulary lookup
 - RSpec; Solid Queue and Kamal configuration for later deployment
 
@@ -107,6 +110,7 @@ master key from `config/master.key` and a strong, persistent database password:
 ```dotenv
 RAILS_MASTER_KEY=your-rails-master-key
 KOTOBA_TRACE_DATABASE_PASSWORD=your-local-database-password
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
 Keep this file private; it is ignored by Git. Build and start the containers:
@@ -145,6 +149,7 @@ unless you intend to delete that data.
 | `POSTGRES_USER` | Development/test database role | `postgres` |
 | `DATABASE_PASSWORD` | Development/test database password | `password` |
 | `DATABASE_URL` | Alternative Rails database connection URL | Unset |
+| `GEMINI_API_KEY` | Gemini API key used by RubyLLM analysis | Required |
 | `FLASHCARD_PROVIDER` | Active flashcard provider (`anki` or `none`) | `anki` |
 | `ANKI_DECK` | Anki deck scanned for vocabulary (blank disables lookup) | `2026 JLPT N2::新完全マスターN2 - 語彙` |
 | `ANKI_EXPRESSION_FIELD` | Note field containing vocabulary expressions | `Expression` |
@@ -214,33 +219,25 @@ seed check. GitHub Actions configuration lives in
 ```text
 Japanese text
     ↓
-Japanese::MorphologicalAnalyzer (MeCab / Natto)
+Japanese::TextAnalyzer
     ↓
-raw Japanese::Morpheme objects
+RubyLLM + Gemini structured output (Schematist schema)
+    ├──→ grouped vocabulary assessments + optional Anki membership
+    └──→ grammar assessments (pattern, example, meaning, explanation)
     ↓
-Japanese::VocabularyExtractor (ordered rules)
-    ↓
-learner-facing vocabulary candidates
-    ↓
-grouped results + Anki lookup → learner assessments → explicit save
+learner assessments → explicit save
 ```
 
-`MorphologicalAnalyzer` preserves raw morphological information. Vocabulary rules
-handle learner-oriented grouping, normalization, and filtering. Candidates retain
-their source morphemes, including separate repeated occurrences through extraction.
-The current save flow persists one assessment per word per analysis; individual
-repetitions are not counted or stored separately. The saved word/analysis links
-provide passage encounter counts and the full original passages for history.
+`Japanese::TextAnalyzer` returns an unsaved `Analysis` with vocabulary grouped by
+lemma and part of speech, plus separate grammar assessments. The learner's choices
+are submitted together and persisted when the analysis is saved. Each saved
+analysis stores one assessment per word or grammar pattern; repeated occurrences
+are not counted separately. Encountered vocabulary readings remain transient and
+do not initialize `dictionary_reading`.
 
-Grouping requires uninterrupted source spans plus either a grammatical pattern
-(verb helpers and approved suffixes) or an explicit compound lexicon entry.
-Unknown noun sequences remain separate. See [Vocabulary grouping](docs/vocabulary-grouping.md)
-for supported patterns, lexical mappings, and how to extend them safely.
-Encountered readings remain transient and do not initialize `dictionary_reading`;
-that field is reserved for separately established dictionary readings.
-
-Future grammar extraction will branch directly from raw morphemes, since it needs
-particles and auxiliaries that vocabulary extraction can group or omit.
+The local `MorphologicalAnalyzer` and ordered `VocabularyExtractor` services remain
+available independently. See [Vocabulary grouping](docs/vocabulary-grouping.md)
+for the behavior and tests of that deterministic pipeline.
 
 ## Project Documents
 

@@ -8,7 +8,7 @@ RSpec.describe "analyses/_results", type: :view do
     assessment.surfaces = [ "記載された" ]
     assessment.surface_readings = [ "キサイサレタ" ]
 
-    render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
+    render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [], grammar_assessment_choices: [] }
 
     cells = Nokogiri::HTML(rendered).css("tbody tr td")
     expect(cells[2].text.strip).to eq("キサイサレタ")
@@ -23,7 +23,9 @@ RSpec.describe "analyses/_results", type: :view do
     assessment.surfaces = [ "記載された" ]
     assessment.surface_readings = []
 
-    render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
+    render partial: "analyses/results", locals: {
+      analysis: analysis, assessment_choices: [], grammar_assessment_choices: []
+    }
 
     expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
   end
@@ -47,7 +49,9 @@ RSpec.describe "analyses/_results", type: :view do
         in_flashcards: membership
       )
 
-      render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
+      render partial: "analyses/results", locals: {
+        analysis: analysis, assessment_choices: [], grammar_assessment_choices: []
+      }
 
       document = Nokogiri::HTML(rendered)
       expect(document.css("tbody tr td")[4].at_css("[title]")["title"]).to eq(label)
@@ -75,5 +79,30 @@ RSpec.describe "analyses/_results", type: :view do
 
     expect(rendered).to include("Flashcard lookup is unavailable")
     expect(Nokogiri::HTML(rendered).at_css('input[type="submit"]')["value"]).to eq("Save")
+  end
+
+  it "renders grammar assessments with the source example and nested save fields" do
+    analysis = Analysis.new(text: "雨が降っている")
+    choice = GrammarAssessmentChoice.create!(key: "understood", position: 3)
+    analysis.grammar_assessments.build(
+      pattern: "〜ている",
+      meaning: "ongoing action",
+      explanation: "Describes an action in progress.",
+      example: "降っている",
+      grammar_assessment_choice: choice
+    )
+
+    render partial: "analyses/results", locals: {
+      analysis: analysis, assessment_choices: [], grammar_assessment_choices: [ choice ]
+    }
+
+    document = Nokogiri::HTML(rendered)
+    expect(document.text).to include("Grammar", "〜ている", "降っている", "ongoing action")
+    expect(document.at_css("table")).to be_nil
+    expect(document.at_css('input[name="analysis[grammar_assessments_attributes][0][pattern]"]')["value"]).to eq("〜ている")
+    select = document.at_css('select[name="analysis[grammar_assessments_attributes][0][grammar_assessment_choice_id]"]')
+    expect(select.at_css("option[selected]")["value"]).to eq(choice.id.to_s)
+    expect(select.text).to include("Understand")
+    expect(document.at_css('input[type="submit"]')).to be_present
   end
 end

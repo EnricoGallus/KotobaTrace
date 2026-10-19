@@ -66,22 +66,21 @@ is a much stronger study candidate than a word encountered once.
 
 ## Japanese analysis architecture
 
-Do not treat MeCab output as learner-facing vocabulary.
-
-The architecture must preserve separate responsibilities:
+The current user-facing analysis is handled by `Japanese::TextAnalyzer`, which
+uses RubyLLM with a Schematist response schema to produce vocabulary and grammar
+assessments from the passage. Keep these as separate learning concepts.
 
     Japanese text
         ↓
-    Japanese::MorphologicalAnalyzer
+    Japanese::TextAnalyzer
         ↓
-    raw morphemes
-        ├───────────────→ Japanese::VocabularyExtractor
-        │                     ↓
-        │                learner-facing vocabulary candidates
-        │
-        └───────────────→ Japanese::GrammarExtractor
-                              ↓
-                         grammar / expressions / keigo
+    RubyLLM structured response
+        ├──→ grouped vocabulary → WordAssessment
+        └──→ grammar pattern, example, meaning, explanation → GrammarAssessment
+
+The local `Japanese::MorphologicalAnalyzer` and `Japanese::VocabularyExtractor`
+remain separately testable services; they are not currently called by the
+user-facing analysis flow.
 
 A future contextual layer may also exist:
 
@@ -173,15 +172,24 @@ Avoid turning VocabularyExtractor into a giant collection of ad-hoc Japanese gra
 
 When a new problem is found in real study material, add or improve the smallest appropriate rule.
 
-### Japanese::GrammarExtractor
+### Japanese::TextAnalyzer
 
-This will be built later.
+This is the current user-facing analyzer. It requests schema-constrained
+vocabulary and grammar results through RubyLLM and returns an unsaved `Analysis`
+containing word assessments grouped by lemma and part of speech, plus distinct
+grammar assessments. Grammar assessments preserve the pattern, source example,
+meaning, and contextual explanation independently from vocabulary records.
 
-It must consume the raw morphemes directly rather than consuming VocabularyExtractor output.
+The response schema and prompt should keep the model grounded in the submitted
+passage: vocabulary surfaces and grammar examples must come from that source.
+Readings and explanations are generated analysis and can be wrong; do not treat
+them as authoritative dictionary data.
 
-This is important because vocabulary extraction intentionally removes or groups particles, auxiliaries, prefixes, and grammatical material that GrammarExtractor will need.
+The deterministic local pipeline remains useful for focused extraction tests
+and can be reintroduced behind this service boundary if needed. Do not assume it
+is the source for the current analysis workflow.
 
-Examples of future grammar/expression candidates:
+Examples of grammar/expression candidates:
 
     お〜ください
     〜までに
@@ -326,7 +334,10 @@ This personalized history is one of the main differentiators of the product.
 
 ## Future AI features
 
-AI should enhance the learner's existing history rather than replace deterministic analysis.
+The current analysis uses AI for passage-grounded vocabulary and grammar
+extraction. Further AI features should enhance the learner's existing history
+without replacing saved learner assessments or presenting generated material as
+authoritative dictionary data.
 
 Potential uses include:
 
@@ -382,9 +393,13 @@ A natural analysis flow is:
 
     user submits text
         ↓
-    Rails creates analysis
+    background job calls Japanese::TextAnalyzer
         ↓
-    background job performs Japanese analysis
+    RubyLLM returns schema-constrained vocabulary and grammar
+        ↓
+    learner reviews and assesses both result types
+        ↓
+    Rails saves the analysis and assessments
         ↓
     Turbo Stream updates analysis results
         ↓
@@ -422,21 +437,17 @@ Avoid replacing Turbo with manual fetch requests unless there is a concrete reas
 
 ## Current product direction
 
-The immediate goal is a usable vocabulary-analysis workflow:
+The immediate goal is a usable vocabulary- and grammar-analysis workflow:
 
-    paste Japanese text or vocabulary list
+    paste Japanese text
         ↓
-    morphological analysis
+    Japanese::TextAnalyzer via RubyLLM
         ↓
-    learner-oriented vocabulary extraction
-        ↓
-    filter obvious noise
-        ↓
-    show candidates
+    review vocabulary and grammar assessments
         ↓
     display prior encounter information
         ↓
-    optionally enrich with Anki/dictionary information
+    optionally enrich vocabulary with Anki information
         ↓
     learner marks Known / Unknown / Ignore
         ↓
@@ -446,7 +457,7 @@ Once this works well with real N2 study material, expand into:
 
     Study Inbox
         ↓
-    grammar extraction/tracking
+    grammar history and correction tools
         ↓
     dictionary enrichment
         ↓

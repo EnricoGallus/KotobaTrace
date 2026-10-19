@@ -2,27 +2,20 @@ require 'rails_helper'
 
 RSpec.describe AnalyzeTextJob, type: :job do
   describe "#perform" do
-    it "builds an unsaved analysis with associated words and broadcasts it" do
-      candidate = Japanese::VocabularyCandidate.new(
-        surface: "猫",
-        base_form: "猫",
-        reading: "ネコ",
-        part_of_speech: "名詞",
-        kind: :vocabulary,
-        morphemes: []
+    it "delegates analysis and broadcasts the unsaved analysis with flashcard membership" do
+      existing_word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネ")
+      analysis = Analysis.new(text: "猫")
+      assessment = analysis.word_assessments.build(word: existing_word)
+      assessment.surfaces = [ "猫" ]
+      assessment.surface_readings = [ "ネコ" ]
+      analysis.grammar_assessments.build(
+        pattern: "〜ている", meaning: "ongoing action", explanation: "Describes an action in progress.",
+        example: "食べている"
       )
       collection = Flashcards::VocabularyCollection.new([ "猫" ], checked: true)
-      existing_word = Word.create!(lemma: "猫", part_of_speech: "名詞", dictionary_reading: "ネ")
       broadcast_locals = nil
 
-      morphemes = []
-      allow(Japanese::MorphologicalAnalyzer).to receive(:call).with("猫").and_return(morphemes)
-      allow(Japanese::VocabularyExtractor).to receive(:call).with(morphemes).and_return([
-        candidate,
-        candidate.with(surface: "田中様", base_form: "田中", kind: :name),
-        candidate.with(surface: "三十分", base_form: "三十分", kind: :number),
-        candidate.with(surface: "十五分前", base_form: "十五分前", kind: :time_expression)
-      ])
+      allow(Japanese::TextAnalyzer).to receive(:call).with("猫").and_return(analysis)
       allow(Flashcards::VocabularyLookup).to receive(:call).and_return(collection)
 
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |stream, target:, partial:, locals:|
@@ -35,62 +28,42 @@ RSpec.describe AnalyzeTextJob, type: :job do
 
       described_class.perform_now("猫", "stream-123", "ja")
 
-      analysis = broadcast_locals.fetch(:analysis)
+      expect(broadcast_locals.fetch(:analysis)).to equal(analysis)
       expect(analysis).not_to be_persisted
-      expect(analysis.text).to eq("猫")
-      expect(analysis.word_assessments.size).to eq(1)
-      expect(analysis.word_assessments.first.word).to eq(existing_word)
-      expect(analysis.word_assessments.first.surfaces).to eq([ "猫" ])
-      expect(analysis.word_assessments.first.surface_readings).to eq([ "ネコ" ])
+      expect(assessment.in_flashcards).to be(true)
+      expect(analysis.grammar_assessments.size).to eq(1)
       expect(existing_word.reload.dictionary_reading).to eq("ネ")
-      expect(analysis.word_assessments.first.in_flashcards).to be(true)
     end
 
     it "still broadcasts usable results and allows saving when Anki is unavailable" do
+      analysis = analysis_with_vocabulary
+      allow(Japanese::TextAnalyzer).to receive(:call).and_return(analysis)
       allow(AnkiConnect::Client).to receive(:new).and_raise(
         AnkiConnect::TransportError.new("Connection refused", original_error: Errno::ECONNREFUSED.new)
       )
       allow(Flashcards::VocabularyLookup).to receive(:call).and_wrap_original do |lookup|
         lookup.call(provider: "anki", deck: "Vocabulary", expression_field: "Expression")
       end
-      analysis = nil
+      broadcast_analysis = nil
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
-        analysis = options.fetch(:locals).fetch(:analysis)
+        broadcast_analysis = options.fetch(:locals).fetch(:analysis)
         expect(options[:locals][:flashcards_unavailable]).to be(true)
       end
 
-      expect { described_class.perform_now("猫を見た", "stream-123") }.not_to raise_error
+      expect { described_class.perform_now("猫", "stream-123") }.not_to raise_error
 
-      expect(analysis.word_assessments).not_to be_empty
-      expect(analysis.word_assessments.map(&:in_flashcards)).to all(be_nil)
+      expect(broadcast_analysis.word_assessments).not_to be_empty
+      expect(broadcast_analysis.word_assessments.map(&:in_flashcards)).to all(be_nil)
       choice = AssessmentChoice.create!(key: "known", position: 4)
-      analysis.word_assessments.each { |assessment| assessment.assessment_choice = choice }
-      analysis.save!
-      expect(analysis.reload.words.pluck(:lemma)).to include("猫")
-    end
-
-    it "keeps encountered readings transient instead of saving them as dictionary readings" do
-      allow(Flashcards::VocabularyLookup).to receive(:call).and_return(Flashcards::VocabularyCollection.new)
-      analysis = nil
-      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
-        analysis = options.fetch(:locals).fetch(:analysis)
-      end
-
-      described_class.perform_now("流行ってる。流行りに乗れる。", "stream-123")
-      assessments = analysis.word_assessments
-      expect(assessments.map { |a| [ a.word.lemma, a.word.part_of_speech ] }).to eq([
-        [ "流行る", "動詞" ], [ "流行り", "名詞" ], [ "乗る", "動詞" ]
-      ])
-      expect(assessments.map(&:surface_readings)).to eq([ [ "ハヤッテル" ], [ "ハヤリ" ], [ "ノレル" ] ])
-      expect(assessments.map { |a| a.word.dictionary_reading }).to all(be_nil)
-      choice = AssessmentChoice.create!(key: "known", position: 4)
-      assessments.each { |assessment| assessment.assessment_choice = choice }
-      analysis.save!
-      expect(analysis.reload.words.pluck(:dictionary_reading)).to all(be_nil)
+      broadcast_analysis.word_assessments.each { |assessment| assessment.assessment_choice = choice }
+      broadcast_analysis.save!
+      expect(broadcast_analysis.reload.words.pluck(:lemma)).to include("猫")
     end
 
     it "broadcasts a localized retryable failure with the request ID" do
-      allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_raise(StandardError, "Internal details")
+      allow(Japanese::TextAnalyzer).to receive(:call).and_raise(StandardError, "Internal details")
+
+      expect(Rails.logger).to receive(:error).with(a_string_including("request_id=attempt-1", "StandardError", "Internal details"))
 
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to).with(
         "stream-123", target: "analysis_results", partial: "analyses/error",
@@ -101,15 +74,26 @@ RSpec.describe AnalyzeTextJob, type: :job do
     end
 
     it "broadcasts an empty result with completion metadata" do
+      allow(Japanese::TextAnalyzer).to receive(:call).and_return(Analysis.new(text: "。"))
       allow(Flashcards::VocabularyLookup).to receive(:call).and_return(Flashcards::VocabularyCollection.new)
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
         expect(options[:partial]).to eq("analyses/results")
         expect(options[:locals][:analysis].word_assessments).to be_empty
+        expect(options[:locals][:analysis].grammar_assessments).to be_empty
         expect(options[:locals][:request_id]).to eq("attempt-1")
         expect(options[:locals][:flashcards_unavailable]).to be(false)
       end
 
       described_class.perform_now("。", "stream-123", "en", "attempt-1")
     end
+  end
+
+  def analysis_with_vocabulary
+    word = Word.new(lemma: "猫", part_of_speech: "名詞")
+    analysis = Analysis.new(text: "猫")
+    assessment = analysis.word_assessments.build(word: word)
+    assessment.surfaces = [ "猫" ]
+    assessment.surface_readings = [ "ネコ" ]
+    analysis
   end
 end

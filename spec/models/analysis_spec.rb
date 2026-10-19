@@ -32,4 +32,43 @@ RSpec.describe Analysis, type: :model do
     expect(analysis).not_to be_valid
     expect(analysis.errors[:text]).to be_present
   end
+
+  it "accepts nested grammar assessments" do
+    analysis = described_class.new(
+      text: "雨が降っている",
+      grammar_assessments_attributes: {
+        "0" => {
+          pattern: "〜ている",
+          meaning: "ongoing action",
+          explanation: "Describes an action in progress.",
+          example: "降っている"
+        }
+      }
+    )
+
+    expect(analysis.grammar_assessments.sole).to have_attributes(
+      pattern: "〜ている",
+      meaning: "ongoing action",
+      explanation: "Describes an action in progress.",
+      example: "降っている"
+    )
+  end
+
+  it "skips ignored new grammar assessments when saving" do
+    ignore = GrammarAssessmentChoice.create!(key: "ignore", position: 0)
+    analysis = described_class.new(
+      text: "雨が降っている",
+      grammar_assessments_attributes: {
+        "0" => {
+          pattern: "〜ている",
+          meaning: "ongoing action",
+          explanation: "Describes an action in progress.",
+          example: "降っている",
+          grammar_assessment_choice: ignore
+        }
+      }
+    )
+
+    expect { analysis.save! }.not_to change(GrammarAssessment, :count)
+  end
 end
