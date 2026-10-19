@@ -193,8 +193,6 @@
   .input-body { min-inline-size: 0; padding: clamp(1rem, 3vw, 1.75rem); }
   .input-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 650; }
   .analysis-input textarea { display: block; width: 100%; max-width: 100%; min-height: 12rem; font-size: 1rem; line-height: 1.8; background: var(--color-base-100); }
-  .analysis-language { margin-top: 1rem; }
-  .analysis-language p { margin-top: 0.4rem; font-size: 0.85rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
   .vocabulary-learning-details { min-width: 12rem; max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
   .vocabulary-learning-details:empty { display: none; }
   .vocabulary-learning-details p { margin-top: 0.4rem; font-size: 0.9rem; }

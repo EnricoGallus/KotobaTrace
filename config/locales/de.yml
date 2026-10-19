@@ -1,0 +1,88 @@
+de:
+  app:
+    name: KotobaTrace
+  language:
+    choose: Sprache wählen
+    english: English
+    japanese: 日本語
+  assessment_choices:
+    ignore: Überspringen
+    unknown: Kenne ich noch nicht
+    reading_only: Kenne nur die Lesung
+    meaning_only: Kenne nur die Bedeutung
+    known: Kenne beides
+  grammar_assessment_choices:
+    ignore: Überspringen
+    unknown: Kenne dieses Muster noch nicht
+    partly_understood: Teilweise verstanden
+    understood: Verstanden
+  analyses:
+    table_scroll_hint: Seitlich scrollen, um alle Spalten zu sehen.
+    introduction: Lerne das Japanisch, dem du begegnest. Füge Text ein, überprüfe ihn und verfolge deinen Wortschatz.
+    results_title: Analyseergebnisse
+    vocabulary_title: Wortschatz
+    grammar_title: Grammatik
+    results_hint: Prüfe Wortschatz und Grammatik, schätze deine Kenntnisse ein und sieh dir gespeicherte Wortverläufe an.
+    error_title: Die Analyse benötigt deine Aufmerksamkeit
+    no_vocabulary_title: Keine Lernvokabeln gefunden
+    usage_example: Anwendungsbeispiel
+    source_excerpt: Aus deinem Text
+    text_label: Text zur Analyse
+    submit: Analysieren
+    retry: Erneut analysieren
+    no_vocabulary: Keine Lernvokabeln gefunden. Versuche einen japanischen Text oder eine Vokabelliste. Namen, Zahlen und Funktionswörter werden gegebenenfalls herausgefiltert.
+    flashcards_unavailable: Die Lernkarten sind nicht erreichbar. Du kannst Vokabeln weiterhin bewerten und speichern; ihr Kartenstatus wurde nicht geprüft.
+    errors:
+      blank_input: Gib vor der Analyse einen japanischen Text ein.
+      failed: Die Analyse konnte nicht abgeschlossen werden. Dein Text ist noch da; versuche es erneut.
+      connection_failed: Die Verbindung für Analyseergebnisse konnte nicht hergestellt werden. Dein Text wurde nicht gesendet. Versuche es erneut.
+      request_failed: Die Analyse konnte nicht gestartet oder ihre Antwort nicht empfangen werden. Prüfe deine Verbindung und versuche es erneut.
+    save: Speichern
+    bulk_assessment_label: Unbewertete Wörter gemeinsam bewerten
+    apply_assessment: Anwenden
+    assessment_prompt: Bewertung wählen
+    connecting: Verbindung für Analyseergebnisse wird hergestellt…
+    in_progress: Analyse läuft…
+    empty_results: Hier erscheinen deine Analyseergebnisse.
+    columns:
+      surface: Form im Text
+      base_form: Grundform und Bedeutung
+      reading: Lesung im Text
+      part_of_speech: Wortart
+      flashcards: Lernkarten
+      passages: Frühere Texte
+      assessment: Bewertung
+    grammar_assessment_label: Grammatikbewertung
+    flashcard_status:
+      included: In Lernkarten enthalten
+      not_included: Nicht in Lernkarten enthalten
+      not_checked: Nicht geprüft
+  word_history:
+    flashcards_unavailable_title: Lernkarten nicht erreichbar
+    load_failed_title: Verlauf konnte nicht geladen werden
+    title: Wortverlauf
+    close: Schließen
+    loading: Wortverlauf wird geladen…
+    load_failed: Der Wortverlauf konnte nicht geladen werden. Deine Analyse und Auswahl bleiben erhalten.
+    retry: Erneut versuchen
+    saved_only: Es werden nur gespeicherte Texte gezählt. Die aktuelle, ungespeicherte Analyse zählt nicht mit.
+    passages: Gefundene Texte
+    first_encounter: Erstes Auftreten
+    last_encounter: Letztes Auftreten
+    never: Noch nicht gesehen
+    choice_summary: Bewertungen insgesamt
+    no_history: Für dieses Wort gibt es noch keinen gespeicherten Verlauf.
+    unassessed: Nicht bewertet
+    timeline: Bewertungsverlauf
+    saved_at: Text gespeichert
+    passage: Text
+    view_passage: Text anzeigen
+    flashcards_not_configured: Lernkarten sind deaktiviert oder nicht eingerichtet; der Kartenstatus wurde nicht geprüft.
+    note: Notiz
+    tags: Schlagwörter
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: darf nicht leer sein
+      required: muss vorhanden sein
+      invalid: ist ungültig

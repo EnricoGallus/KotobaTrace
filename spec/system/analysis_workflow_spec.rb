@@ -145,6 +145,41 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(page).to have_no_css("#vocabulary-tab")
   end
 
+  { "de" => [ "Deutsch", "Katze", "Die Katze schläft." ],
+    "vi" => [ "Tiếng Việt", "con mèo", "Con mèo đang ngủ." ] }.each do |language, (label, meaning, translation)|
+    it "shows vocabulary and grammar teaching examples in #{label}" do
+      allow(Japanese::TextAnalyzer).to receive(:call).with("猫が寝ている。", output_language: language) do
+        analysis = Analysis.new(text: "猫が寝ている。", output_language: language)
+        assessment = analysis.word_assessments.build(
+          word: Word.new(lemma: "猫", part_of_speech: "名詞"), translation: meaning,
+          example_sentence: "猫が寝ている。", example_translation: translation
+        )
+        assessment.surfaces = [ "猫" ]
+        analysis.grammar_assessments.build(
+          pattern: "〜ている", meaning: "ongoing action", explanation: "Describes an action in progress.",
+          example: "寝ている", usage_example: "猫が寝ている。", usage_example_translation: translation
+        )
+        analysis
+      end
+      open_analysis(language)
+      submit_text("猫が寝ている。", I18n.t("analyses.submit", locale: language))
+      perform_enqueued_jobs
+
+      within("#vocabulary-panel") do
+        expect(page).to have_css("p[lang='#{language}']", text: meaning)
+        find("summary", text: I18n.t("analyses.usage_example", locale: language)).click
+        expect(page).to have_text(translation)
+        expect(page).to have_css('details p[lang="ja"]', text: "猫が寝ている。")
+      end
+      find("#grammar-tab").click
+      within("#grammar-panel") do
+        expect(page).to have_text(I18n.t("analyses.source_excerpt", locale: language))
+        expect(page).to have_text(I18n.t("analyses.usage_example", locale: language))
+        expect(page).to have_css(".grammar-usage-example p[lang='#{language}']", text: translation)
+      end
+    end
+  end
+
   it "requires a choice for every word and skips ignored words on save" do
     known = AssessmentChoice.create!(key: "known", position: 4)
     ignore = AssessmentChoice.create!(key: "ignore", position: 0)
@@ -342,13 +377,68 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(page).to have_no_css('[data-analyze-text-target="progress"]', visible: true)
   end
 
+  it "renders a late completion for the current request after the browser timeout" do
+    open_analysis
+    page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-timeout-value', '1000')")
+    submit_text("猫")
+    expect(page).to have_text("Retry analysis")
+    expect(page).to have_button("Analyze", disabled: false)
+
+    perform_enqueued_jobs
+
+    expect(page).to have_css("tbody tr", minimum: 1)
+    expect(page).not_to have_text("Retry analysis")
+    expect(page).to have_button("Analyze", disabled: false)
+  end
+
+  it "ignores an older completion after retrying a timed-out request" do
+    open_analysis
+    page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-timeout-value', '1000')")
+    submit_text("猫")
+    expect(page).to have_text("Retry analysis")
+    old_job = enqueued_jobs.first
+    clear_enqueued_jobs
+    page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-timeout-value', '600000')")
+    submit_text("犬")
+
+    ActiveJob::Base.execute(old_job)
+    expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
+    expect(page).to have_no_css("tbody tr")
+    perform_enqueued_jobs
+
+    expect(page).to have_css("tbody tr", text: "犬")
+    expect(page).to have_no_css("tbody tr", text: "猫")
+    expect(page).to have_button("Analyze", disabled: false)
+  end
+
+  it "waits for a delayed subscription and submits exactly once when it connects" do
+    open_analysis
+    page.execute_script("document.querySelector('turbo-cable-stream-source').removeAttribute('connected')")
+    fill_in "text", with: "猫"
+    click_button "Analyze"
+
+    expect(page).to have_text("Connecting to analysis updates")
+    expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
+    expect(enqueued_jobs).to be_empty
+    page.execute_script("document.querySelector('form.analysis-input').requestSubmit()")
+    page.execute_script("document.querySelector('turbo-cable-stream-source').setAttribute('connected', '')")
+    expect(page).to have_css('form[aria-busy="true"] input[type="submit"]:not([disabled])')
+    expect(enqueued_jobs.size).to eq(1)
+    perform_enqueued_jobs
+
+    expect(page).to have_css("tbody tr", minimum: 1)
+    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).not_to have_text("Could not start analysis")
+  end
+
   it "allows retrying when the stream subscription is disconnected" do
     open_analysis
+    page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-connection-timeout-value', '200')")
     page.execute_script("document.querySelector('turbo-cable-stream-source').remove()")
     fill_in "text", with: "猫"
     click_button "Analyze"
 
-    expect(page).to have_text("Retry analysis")
+    expect(page).to have_text("Could not connect to analysis updates")
     expect(page).to have_field("text", with: "猫", disabled: false)
     expect(enqueued_jobs).to be_empty
   end

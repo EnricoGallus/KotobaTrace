@@ -1,11 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "completion", "bulkAssessment", "assessment"]
-  static values = { progressLabel: String, timeout: { type: Number, default: 180000 } }
+  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "connectionErrorTemplate", "completion", "bulkAssessment", "assessment"]
+  static values = { progressLabel: String, connectingLabel: String, timeout: { type: Number, default: 600000 }, connectionTimeout: { type: Number, default: 30000 } }
 
   disconnect() {
     clearTimeout(this.completionTimeout)
+    clearTimeout(this.connectionTimeout)
+    this.connectionObserver?.disconnect()
   }
 
   prepare(event) {
@@ -17,14 +19,34 @@ export default class extends Controller {
     // Broadcasts sent before the subscription connects are lost.
     if (!this.element.querySelector("turbo-cable-stream-source[connected]")) {
       event.preventDefault()
-      this.pending = true
-      this.requestFailed()
+      this.waitForConnection()
       return
     }
 
     // getRandomValues also works for local HTTP development origins.
     this.requestIdTarget.value = crypto.getRandomValues(new Uint32Array(4)).join("-")
     this.resultsTarget.replaceChildren()
+  }
+
+  waitForConnection() {
+    this.pending = true
+    this.submitLabel = this.submitTarget.value
+    this.showProgress()
+    this.submitTarget.value = this.connectingLabelValue
+    this.progressTarget.textContent = this.connectingLabelValue
+
+    this.connectionObserver = new MutationObserver(() => {
+      if (!this.element.querySelector("turbo-cable-stream-source[connected]")) return
+      this.finish()
+      this.formTarget.requestSubmit(this.submitTarget)
+    })
+    this.connectionObserver.observe(this.element, {
+      subtree: true, childList: true, attributes: true, attributeFilter: ["connected"]
+    })
+    this.connectionTimeout = setTimeout(() => {
+      this.resultsTarget.replaceChildren(this.connectionErrorTemplateTarget.content.cloneNode(true))
+      this.finish()
+    }, this.connectionTimeoutValue)
   }
 
   start() {
@@ -35,16 +57,13 @@ export default class extends Controller {
   }
 
   submissionFinished(event) {
-    // Turbo's submit-end only acknowledges enqueueing, not job completion.
     if (!this.pending) return
-
-    if (event.detail.success) {
-      this.showProgress()
-    } else {
-      // Validation/enqueue errors supply their own terminal Turbo Stream.
-      if (!event.detail.fetchResponse?.contentType?.includes("text/vnd.turbo-stream.html")) {
-        this.requestFailed()
-      }
+    // Turbo clears aria-busy and restores the button after enqueueing.
+    // Keep the job's progress state until its completion arrives.
+    this.showProgress()
+    if (!event.detail.success &&
+        !event.detail.fetchResponse?.contentType?.includes("text/vnd.turbo-stream.html")) {
+      this.requestFailed()
     }
   }
 
@@ -66,7 +85,8 @@ export default class extends Controller {
     const completion = event.target.templateElement.content.querySelector("[data-analysis-request-id]")
     const requestId = completion?.dataset.analysisRequestId
     // Save-validation responses have no request ID and must remain renderable.
-    if (requestId && (!this.pending || requestId !== this.requestIdTarget.value)) {
+    // A timeout only unlocks the form. The current job may still finish later.
+    if (requestId && requestId !== this.requestIdTarget.value) {
       event.preventDefault()
     }
   }
@@ -79,6 +99,9 @@ export default class extends Controller {
 
   finish() {
     clearTimeout(this.completionTimeout)
+    clearTimeout(this.connectionTimeout)
+    this.connectionObserver?.disconnect()
+    this.progressTarget.textContent = this.progressLabelValue
     this.pending = false
     this.controlsTarget.disabled = false
     this.formTarget.setAttribute("aria-busy", "false")

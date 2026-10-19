@@ -2,6 +2,7 @@
      data-controller="analyze-text word-history"
      data-word-history-loading-value="<%= t("word_history.loading") %>"
      data-action="turbo:before-stream-render@document->analyze-text#filterStream"
+     data-analyze-text-connecting-label-value="<%= t("analyses.connecting") %>"
      data-analyze-text-progress-label-value="<%= t("analyses.in_progress") %>">
   <%= turbo_stream_from @stream_key %>
 
@@ -21,13 +22,6 @@
             class: "textarea w-full",
             data: { analyze_text_target: "textInput" } %>
 
-      <div class="analysis-language">
-        <%= label_tag :output_language, t("analyses.output_language"), class: "input-label" %>
-        <%= select_tag :output_language,
-              options_for_select(Japanese::OutputLanguage::LABELS.map { |code, label| [label, code] }, I18n.locale.to_s),
-              class: "select select-bordered", aria: { describedby: "output-language-hint" } %>
-        <p id="output-language-hint"><%= t("analyses.output_language_hint") %></p>
-      </div>
       <div class="card-actions justify-end">
         <%= submit_tag t("analyses.submit"), class: "btn btn-primary",
               data: { analyze_text_target: "submit" } %>
@@ -59,6 +53,9 @@
     <button type="button" class="btn btn-sm mt-3" data-action="word-history#reload"><%= t("word_history.retry") %></button>
   </template>
 
+  <template data-analyze-text-target="connectionErrorTemplate">
+    <%= render "analyses/error", message: "connection_failed", request_id: nil %>
+  </template>
   <template data-analyze-text-target="errorTemplate">
     <%= render "analyses/error", message: "request_failed", request_id: nil %>
   </template>

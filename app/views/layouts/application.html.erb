@@ -25,10 +25,10 @@
 
   <body>
     <nav class="app-shell language-nav" aria-label="<%= t("language.choose") %>">
-      <%= link_to t("language.english"), url_for(locale: :en), lang: "en",
-            aria: { current: I18n.locale == :en ? "page" : nil } %>
-      <%= link_to t("language.japanese"), url_for(locale: :ja), lang: "ja",
-            aria: { current: I18n.locale == :ja ? "page" : nil } %>
+      <% I18n.available_locales.each do |locale| %>
+        <%= link_to Japanese::OutputLanguage::LABELS.fetch(locale.to_s), url_for(locale: locale), lang: locale,
+              aria: { current: I18n.locale == locale ? "page" : nil } %>
+      <% end %>
     </nav>
     <main class="app-shell app-main">
       <%= yield %>

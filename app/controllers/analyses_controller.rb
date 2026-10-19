@@ -12,8 +12,7 @@ class AnalysesController < ApplicationController
       return
     end
 
-    output_language = Japanese::OutputLanguage.normalize(params[:output_language].presence || I18n.locale)
-    job = AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s, request_id, output_language)
+    job = AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s, request_id)
     unless job
       render_analysis_error("failed", request_id, :service_unavailable)
       return

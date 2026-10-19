@@ -35,6 +35,18 @@ RSpec.describe AnalyzeTextJob, type: :job do
       expect(existing_word.reload.dictionary_reading).to eq("ネ")
     end
 
+    it "uses the application language for the AI output and result rendering" do
+      analysis = Analysis.new(text: "猫", output_language: "de")
+      expect(Japanese::TextAnalyzer).to receive(:call).with("猫", output_language: "de").and_return(analysis)
+      allow(Flashcards::VocabularyLookup).to receive(:call).and_return(Flashcards::VocabularyCollection.new)
+      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |_, **options|
+        expect(I18n.locale).to eq(:de)
+        expect(options[:locals][:analysis].output_language).to eq("de")
+      end
+
+      described_class.perform_now("猫", "stream-123", "de", "attempt-1")
+    end
+
     it "still broadcasts usable results and allows saving when Anki is unavailable" do
       analysis = analysis_with_vocabulary
       allow(Japanese::TextAnalyzer).to receive(:call).and_return(analysis)
@@ -71,6 +83,20 @@ RSpec.describe AnalyzeTextJob, type: :job do
       ) { expect(I18n.locale).to eq(:ja) }
 
       described_class.perform_now("猫", "stream-123", "ja", "attempt-1")
+    end
+
+    it "identifies the stage that failed without exposing it in the user-facing error" do
+      allow(Japanese::TextAnalyzer).to receive(:call).and_return(analysis_with_vocabulary)
+      allow(Flashcards::VocabularyLookup).to receive(:call).and_raise(StandardError, "Lookup failure")
+      expect(Rails.logger).to receive(:error).with(a_string_including(
+        "request_id=attempt-1", "stage=flashcards", "Lookup failure"
+      ))
+      expect(Turbo::StreamsChannel).to receive(:broadcast_update_to).with(
+        "stream-123", target: "analysis_results", partial: "analyses/error",
+        locals: { message: "failed", request_id: "attempt-1" }
+      )
+
+      described_class.perform_now("猫", "stream-123", "en", "attempt-1")
     end
 
     it "broadcasts an empty result with completion metadata" do

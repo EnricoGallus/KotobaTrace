@@ -21,6 +21,14 @@ RSpec.describe "Analyses", type: :request do
       expect(response.body).to include('action="/analysis?locale=ja"')
     end
 
+    { "de" => "Text zur Analyse", "vi" => "Văn bản cần phân tích" }.each do |locale, label|
+      it "renders the #{locale} application with all four language links and no output-language selector" do
+        get new_analysis_path, params: { locale: locale }
+        expect(response.body).to include("<html lang=\"#{locale}\">", label, "Deutsch", "Tiếng Việt", "日本語", "English")
+        expect(response.body).not_to include('name="output_language"', "translation missing")
+      end
+    end
+
     it "uses the default locale for unsupported locales" do
       get new_analysis_path, params: { locale: "fr" }
 
@@ -33,7 +41,7 @@ RSpec.describe "Analyses", type: :request do
   describe "POST /analysis" do
     it "queues analysis and acknowledges enqueueing without overwriting job results" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en", "attempt-1", "en").and_return(AnalyzeTextJob.new)
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en", "attempt-1").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
         params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1" },
@@ -44,32 +52,22 @@ RSpec.describe "Analyses", type: :request do
     end
 
     %w[de vi].each do |language|
-      it "passes #{language} separately from the interface locale to the job" do
+      it "uses the #{language} application language for analysis and ignores a separate output language" do
         expect(AnalyzeTextJob).to receive(:perform_later).with(
-          "猫", "stream", "ja", "attempt-1", language
+          "猫", "stream", language, "attempt-1"
         ).and_return(AnalyzeTextJob.new)
 
         post analysis_path, params: {
-          text: "猫", stream_key: "stream", request_id: "attempt-1", locale: "ja", output_language: language
+          text: "猫", stream_key: "stream", request_id: "attempt-1", locale: language, output_language: "en"
         }
 
         expect(response).to have_http_status(:accepted)
       end
     end
 
-    it "falls back to English for an unsupported output language" do
-      expect(AnalyzeTextJob).to receive(:perform_later).with(
-        "猫", "stream", "en", "attempt-1", "en"
-      ).and_return(AnalyzeTextJob.new)
-      post analysis_path, params: {
-        text: "猫", stream_key: "stream", request_id: "attempt-1", output_language: "invalid"
-      }
-      expect(response).to have_http_status(:accepted)
-    end
-
     it "queues the analysis using the selected locale" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja", "attempt-1", "ja").and_return(AnalyzeTextJob.new)
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja", "attempt-1").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
         params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1", locale: "ja" },

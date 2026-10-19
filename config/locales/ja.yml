@@ -25,8 +25,6 @@ ja:
     results_hint: 語彙と文法を確認して評価し、保存済みの単語履歴を確認できます。
     error_title: 解析を確認してください
     no_vocabulary_title: 学習対象の語彙が見つかりませんでした
-    output_language: 解説の言語
-    output_language_hint: 意味・翻訳・解説に使用する言語を選んでください。
     usage_example: 用例
     source_excerpt: 入力文からの引用
     text_label: 解析するテキスト
@@ -37,11 +35,13 @@ ja:
     errors:
       blank_input: 解析する日本語のテキストを入力してください。
       failed: 解析を完了できませんでした。入力したテキストは残っています。もう一度お試しください。
+      connection_failed: 解析結果の受信に接続できませんでした。テキストは送信されていません。もう一度お試しください。
       request_failed: 解析の開始または応答の受信に失敗しました。接続を確認して、もう一度お試しください。
     save: 保存
     bulk_assessment_label: 未評価の単語をまとめて評価
     apply_assessment: 適用
     assessment_prompt: 評価を選択
+    connecting: 解析結果の受信に接続中…
     in_progress: 解析中…
     empty_results: 解析結果がここに表示されます。
     columns:

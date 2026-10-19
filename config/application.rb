@@ -10,7 +10,7 @@ module KotobaTrace
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
-    config.i18n.available_locales = %i[en ja]
+    config.i18n.available_locales = %i[en ja de vi]
     config.i18n.default_locale = :en
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

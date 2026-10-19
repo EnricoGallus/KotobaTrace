@@ -25,8 +25,6 @@ en:
     results_hint: Review vocabulary and grammar, assess what you know, and explore saved word history.
     error_title: Analysis needs your attention
     no_vocabulary_title: No study vocabulary found
-    output_language: Explanation language
-    output_language_hint: Choose the language for meanings, translations, and explanations.
     usage_example: Usage example
     source_excerpt: From your text
     text_label: Text to analyze
@@ -37,11 +35,13 @@ en:
     errors:
       blank_input: Enter some Japanese text before analyzing.
       failed: Analysis could not be completed. Your text is still here; please try again.
+      connection_failed: Could not connect to analysis updates. Your text has not been submitted. Please try again.
       request_failed: Could not start analysis or receive its response. Check your connection and try again.
     save: Save
     bulk_assessment_label: Set unassessed words to
     apply_assessment: Apply
     assessment_prompt: Choose an assessment
+    connecting: Connecting to analysis updates…
     in_progress: "Analysis in progress…"
     empty_results: Your analysis results will appear here.
     columns:
