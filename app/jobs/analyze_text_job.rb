@@ -1,11 +1,11 @@
 class AnalyzeTextJob < ApplicationJob
   queue_as :default
 
-  def perform(text, stream_key, locale = I18n.default_locale.to_s, request_id = nil)
+  def perform(text, stream_key, locale = I18n.default_locale.to_s, request_id = nil, output_language = locale)
     locale = I18n.available_locales.find { |available| available.to_s == locale.to_s } || I18n.default_locale
 
     I18n.with_locale(locale) do
-      analysis = Japanese::TextAnalyzer.call(text)
+      analysis = Japanese::TextAnalyzer.call(text, output_language: Japanese::OutputLanguage.normalize(output_language))
       collection = Flashcards::VocabularyLookup.call
       if collection.checked?
         analysis.word_assessments.each do |assessment|

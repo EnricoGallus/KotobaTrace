@@ -21,6 +21,13 @@
             class: "textarea w-full",
             data: { analyze_text_target: "textInput" } %>
 
+      <div class="analysis-language">
+        <%= label_tag :output_language, t("analyses.output_language"), class: "input-label" %>
+        <%= select_tag :output_language,
+              options_for_select(Japanese::OutputLanguage::LABELS.map { |code, label| [label, code] }, I18n.locale.to_s),
+              class: "select select-bordered", aria: { describedby: "output-language-hint" } %>
+        <p id="output-language-hint"><%= t("analyses.output_language_hint") %></p>
+      </div>
       <div class="card-actions justify-end">
         <%= submit_tag t("analyses.submit"), class: "btn btn-primary",
               data: { analyze_text_target: "submit" } %>

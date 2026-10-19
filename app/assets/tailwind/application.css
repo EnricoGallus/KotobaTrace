@@ -193,13 +193,28 @@
   .input-body { min-inline-size: 0; padding: clamp(1rem, 3vw, 1.75rem); }
   .input-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 650; }
   .analysis-input textarea { display: block; width: 100%; max-width: 100%; min-height: 12rem; font-size: 1rem; line-height: 1.8; background: var(--color-base-100); }
+  .analysis-language { margin-top: 1rem; }
+  .analysis-language p { margin-top: 0.4rem; font-size: 0.85rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
+  .vocabulary-learning-details { min-width: 12rem; max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
+  .vocabulary-learning-details:empty { display: none; }
+  .vocabulary-learning-details p { margin-top: 0.4rem; font-size: 0.9rem; }
+  .vocabulary-learning-details details { margin-top: 0.5rem; }
+  .vocabulary-learning-details summary { cursor: pointer; font-size: 0.8rem; color: var(--color-primary); }
+  .grammar-usage-example { margin-top: 0.8rem; padding-top: 0.5rem; border-top: 1px solid var(--color-base-300); }
+  .grammar-assessment-content .learning-detail-label { font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); }
   .analysis-input .card-actions { display: flex; margin-top: 1rem; }
   .workspace-placeholder { padding: 1.5rem 0; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); }
   .analysis-progress { padding: 1rem; margin-bottom: 1rem; border-inline-start: 3px solid var(--color-primary); }
   .analysis-progress[hidden] { display: none; }
   .results-panel { width: 100%; min-width: 0; overflow: hidden; }
+  .results-tabs { display: flex; gap: 0.5rem; margin: 1rem 1.5rem 0; border-bottom: 1px solid var(--color-base-300); }
+  .results-tabs[hidden], .results-panel [role="tabpanel"][hidden] { display: none; }
+  .results-tabs [role="tab"] { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.9rem; border-bottom: 3px solid transparent; font-weight: 600; cursor: pointer; }
+  .results-tabs [aria-selected="true"] { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+  .results-tabs [role="tab"]:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+  .results-tab-count { padding: 0.05rem 0.45rem; border-radius: 1rem; background: var(--color-base-200); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
   .results-heading { padding: 1.5rem 1.5rem 0; }
-  .table-scroll-hint { display: none; }
+  .table-scroll-hint { display: none; margin: 0 1.5rem 1rem; font-size: 0.9rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
   .results-heading h2, .empty-state h2 { font-size: 1.3rem; }
   .results-subheading { margin: 0 1.5rem 1rem; font-size: 1.15rem; }
   .results-heading p, .empty-state p { margin-top: 0.4rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); font-size: 0.9rem; }

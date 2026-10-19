@@ -9,3 +9,6 @@ application.register("analyze-text", AnalyzeTextController)
 
 import WordHistoryController from "./word_history_controller"
 application.register("word-history", WordHistoryController)
+
+import ResultTabsController from "./result_tabs_controller"
+application.register("result-tabs", ResultTabsController)

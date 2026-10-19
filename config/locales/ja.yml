@@ -25,6 +25,10 @@ ja:
     results_hint: 語彙と文法を確認して評価し、保存済みの単語履歴を確認できます。
     error_title: 解析を確認してください
     no_vocabulary_title: 学習対象の語彙が見つかりませんでした
+    output_language: 解説の言語
+    output_language_hint: 意味・翻訳・解説に使用する言語を選んでください。
+    usage_example: 用例
+    source_excerpt: 入力文からの引用
     text_label: 解析するテキスト
     submit: 解析
     retry: もう一度解析
@@ -42,7 +46,7 @@ ja:
     empty_results: 解析結果がここに表示されます。
     columns:
       surface: 文中の表記
-      base_form: 基本形
+      base_form: 基本形・意味
       reading: 文中の読み
       part_of_speech: 品詞
       flashcards: 単語カード

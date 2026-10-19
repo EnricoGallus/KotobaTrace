@@ -12,7 +12,8 @@ class AnalysesController < ApplicationController
       return
     end
 
-    job = AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s, request_id)
+    output_language = Japanese::OutputLanguage.normalize(params[:output_language].presence || I18n.locale)
+    job = AnalyzeTextJob.perform_later(text, params.require(:stream_key), I18n.locale.to_s, request_id, output_language)
     unless job
       render_analysis_error("failed", request_id, :service_unavailable)
       return
@@ -56,16 +57,16 @@ class AnalysesController < ApplicationController
 
   def analysis_params
     params.require(:analysis).permit(
-      :text,
+      :text, :output_language,
       word_assessments_attributes: [
         :assessment_choice_id,
-        :in_flashcards,
+        :in_flashcards, :translation, :example_sentence, :example_translation,
         { surfaces: [] },
         { surface_readings: [] },
         { word_attributes: %i[lemma part_of_speech dictionary_reading] }
       ],
       grammar_assessments_attributes: %i[
-        grammar_assessment_choice_id pattern meaning explanation example
+        grammar_assessment_choice_id pattern meaning explanation example usage_example usage_example_translation
       ]
     )
   end

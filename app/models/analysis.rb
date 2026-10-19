@@ -3,6 +3,8 @@ class Analysis < ApplicationRecord
   has_many :grammar_assessments, inverse_of: :analysis, dependent: :destroy
   has_many :words, through: :word_assessments
 
+  attr_accessor :output_language
+
   validates :text, presence: true
 
   accepts_nested_attributes_for :word_assessments

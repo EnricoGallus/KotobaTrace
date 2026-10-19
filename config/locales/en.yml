@@ -25,6 +25,10 @@ en:
     results_hint: Review vocabulary and grammar, assess what you know, and explore saved word history.
     error_title: Analysis needs your attention
     no_vocabulary_title: No study vocabulary found
+    output_language: Explanation language
+    output_language_hint: Choose the language for meanings, translations, and explanations.
+    usage_example: Usage example
+    source_excerpt: From your text
     text_label: Text to analyze
     submit: Analyze
     retry: Retry analysis
@@ -42,7 +46,7 @@ en:
     empty_results: Your analysis results will appear here.
     columns:
       surface: Encountered form
-      base_form: Base form
+      base_form: Base form & meaning
       reading: Encountered reading
       part_of_speech: Part of speech
       flashcards: Flashcards

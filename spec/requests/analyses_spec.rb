@@ -33,7 +33,7 @@ RSpec.describe "Analyses", type: :request do
   describe "POST /analysis" do
     it "queues analysis and acknowledges enqueueing without overwriting job results" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en", "attempt-1").and_return(AnalyzeTextJob.new)
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "en", "attempt-1", "en").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
         params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1" },
@@ -43,9 +43,33 @@ RSpec.describe "Analyses", type: :request do
       expect(response.body).to be_empty
     end
 
+    %w[de vi].each do |language|
+      it "passes #{language} separately from the interface locale to the job" do
+        expect(AnalyzeTextJob).to receive(:perform_later).with(
+          "猫", "stream", "ja", "attempt-1", language
+        ).and_return(AnalyzeTextJob.new)
+
+        post analysis_path, params: {
+          text: "猫", stream_key: "stream", request_id: "attempt-1", locale: "ja", output_language: language
+        }
+
+        expect(response).to have_http_status(:accepted)
+      end
+    end
+
+    it "falls back to English for an unsupported output language" do
+      expect(AnalyzeTextJob).to receive(:perform_later).with(
+        "猫", "stream", "en", "attempt-1", "en"
+      ).and_return(AnalyzeTextJob.new)
+      post analysis_path, params: {
+        text: "猫", stream_key: "stream", request_id: "attempt-1", output_language: "invalid"
+      }
+      expect(response).to have_http_status(:accepted)
+    end
+
     it "queues the analysis using the selected locale" do
       stream_key = SecureRandom.uuid
-      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja", "attempt-1").and_return(AnalyzeTextJob.new)
+      expect(AnalyzeTextJob).to receive(:perform_later).with("猫を見た", stream_key, "ja", "attempt-1", "ja").and_return(AnalyzeTextJob.new)
 
       post analysis_path,
         params: { text: "猫を見た", stream_key: stream_key, request_id: "attempt-1", locale: "ja" },
@@ -259,7 +283,7 @@ RSpec.describe "Analyses", type: :request do
       post save_analysis_path,
         params: {
           analysis: {
-            text: "猫",
+            text: "猫", output_language: "de",
             word_assessments_attributes: {
               "0" => {
                 word_attributes: {
@@ -269,7 +293,8 @@ RSpec.describe "Analyses", type: :request do
                 },
                 assessment_choice_id: "999999",
                 surface_readings: [ "", "ネコ" ],
-                surfaces: [ "猫" ]
+                surfaces: [ "猫" ], translation: "Katze",
+                example_sentence: "猫がいる。", example_translation: "Da ist eine Katze."
               }
             }
           }
@@ -279,7 +304,7 @@ RSpec.describe "Analyses", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
       expect(response.body).to include('<turbo-stream action="update" target="analysis_results">')
-      expect(response.body).to include("Assessment choice")
+      expect(response.body).to include("Assessment choice", "Katze", "猫がいる。", "Da ist eine Katze.", 'lang="de"')
       expect(Nokogiri::HTML(response.body).css("tbody tr td")[2].text.strip).to eq("ネコ")
       expect(Analysis.count).to eq(0)
     end

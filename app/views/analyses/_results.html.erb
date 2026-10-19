@@ -1,3 +1,4 @@
+<% output_language = Japanese::OutputLanguage.normalize(analysis.output_language || I18n.locale) %>
 <div data-analyze-text-target="completion" data-analysis-request-id="<%= local_assigns[:request_id] %>">
   <% if local_assigns[:flashcards_unavailable] %>
     <%= render "shared/notice", tone: "warning", title: t("word_history.flashcards_unavailable_title"), message: t("analyses.flashcards_unavailable") %>
@@ -8,13 +9,13 @@
       <p><%= t("analyses.no_vocabulary") %></p>
     </div>
   <% else %>
-<%= form_with url: save_analysis_path, scope: :analysis, method: :post, class: "results-panel ui-panel" do |form| %>
+<%= form_with url: save_analysis_path, scope: :analysis, method: :post, class: "results-panel ui-panel", data: { controller: "result-tabs" } do |form| %>
   <header class="results-heading">
     <h2><%= t("analyses.results_title") %></h2>
     <p><%= t("analyses.results_hint") %></p>
-    <p class="table-scroll-hint"><%= t("analyses.table_scroll_hint") %></p>
   </header>
   <%= form.hidden_field :text, value: analysis.text %>
+  <%= form.hidden_field :output_language, value: output_language %>
 
   <% errors = analysis.errors.full_messages %>
   <% analysis.word_assessments.each do |assessment| %>
@@ -34,7 +35,27 @@
     </div>
   <% end %>
 
+  <div class="results-tabs" role="tablist" aria-label="<%= t("analyses.results_title") %>"
+       hidden data-result-tabs-target="navigation">
+    <% if analysis.word_assessments.any? %>
+      <button type="button" id="vocabulary-tab" role="tab" aria-controls="vocabulary-panel"
+              aria-selected="true" data-result-tabs-target="tab"
+              data-action="result-tabs#select keydown->result-tabs#navigate">
+        <%= t("analyses.vocabulary_title") %> <span class="results-tab-count"><%= analysis.word_assessments.size %></span>
+      </button>
+    <% end %>
+    <% if analysis.grammar_assessments.any? %>
+      <button type="button" id="grammar-tab" role="tab" aria-controls="grammar-panel"
+              aria-selected="false" data-result-tabs-target="tab"
+              data-action="result-tabs#select keydown->result-tabs#navigate">
+        <%= t("analyses.grammar_title") %> <span class="results-tab-count"><%= analysis.grammar_assessments.size %></span>
+      </button>
+    <% end %>
+  </div>
+
   <% if analysis.word_assessments.any? %>
+  <section id="vocabulary-panel" role="tabpanel" aria-labelledby="vocabulary-tab"
+           tabindex="0" data-result-tabs-target="panel">
   <div class="assessment-toolbar">
     <div>
       <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
@@ -48,10 +69,9 @@
       <%= t("analyses.apply_assessment") %>
     </button>
   </div>
-  <% end %>
 
-  <% if analysis.word_assessments.any? %>
   <h3 class="results-subheading"><%= t("analyses.vocabulary_title") %></h3>
+  <p class="table-scroll-hint"><%= t("analyses.table_scroll_hint") %></p>
   <% passage_counts = saved_passage_counts(analysis) %>
   <div class="vocabulary-scroll" tabindex="0" role="region" aria-label="<%= t("analyses.results_title") %>">
     <table class="table vocabulary-table">
@@ -87,6 +107,21 @@
                       data-word-history-url="<%= word_history_path(lemma: word&.lemma, part_of_speech: word&.part_of_speech) %>">
                 <%= word&.lemma %>
               </button>
+              <div class="vocabulary-learning-details">
+                <% if assessment.translation.present? %>
+                  <p lang="<%= output_language %>"><%= assessment.translation %></p>
+                <% end %>
+                <% if assessment.example_sentence.present? %>
+                  <details>
+                    <summary><%= t("analyses.usage_example") %></summary>
+                    <p lang="ja"><%= assessment.example_sentence %></p>
+                    <p lang="<%= output_language %>"><%= assessment.example_translation %></p>
+                  </details>
+                <% end %>
+              </div>
+              <% %i[translation example_sentence example_translation].each do |attribute| %>
+                <%= hidden_field_tag "#{field_name}[#{attribute}]", assessment.public_send(attribute) %>
+              <% end %>
             </td>
             <td lang="ja" class="text-base-content/70">
               <% readings = assessment.surface_readings.to_a.reject(&:blank?) %>
@@ -124,10 +159,12 @@
       </tbody>
     </table>
   </div>
+  </section>
   <% end %>
 
   <% if analysis.grammar_assessments.any? %>
-    <section class="grammar-results" aria-labelledby="grammar-results-title">
+    <section id="grammar-panel" class="grammar-results" role="tabpanel" aria-labelledby="grammar-tab"
+             tabindex="0" data-result-tabs-target="panel">
       <h3 id="grammar-results-title"><%= t("analyses.grammar_title") %></h3>
       <ul class="grammar-assessment-list">
         <% analysis.grammar_assessments.each_with_index do |assessment, index| %>
@@ -135,15 +172,25 @@
           <li class="grammar-assessment">
             <div class="grammar-assessment-content">
               <h4 lang="ja"><%= assessment.pattern %></h4>
+              <p class="learning-detail-label"><%= t("analyses.source_excerpt") %></p>
               <p class="grammar-example" lang="ja"><%= assessment.example %></p>
-              <p><strong><%= assessment.meaning %></strong></p>
-              <p><%= assessment.explanation %></p>
+              <p lang="<%= output_language %>"><strong><%= assessment.meaning %></strong></p>
+              <p lang="<%= output_language %>"><%= assessment.explanation %></p>
+              <% if assessment.usage_example.present? %>
+                <div class="grammar-usage-example">
+                  <p class="learning-detail-label"><%= t("analyses.usage_example") %></p>
+                  <p lang="ja"><%= assessment.usage_example %></p>
+                  <p lang="<%= output_language %>"><%= assessment.usage_example_translation %></p>
+                </div>
+              <% end %>
             </div>
             <div class="grammar-assessment-choice">
               <%= hidden_field_tag "#{field_name}[pattern]", assessment.pattern %>
               <%= hidden_field_tag "#{field_name}[meaning]", assessment.meaning %>
               <%= hidden_field_tag "#{field_name}[explanation]", assessment.explanation %>
               <%= hidden_field_tag "#{field_name}[example]", assessment.example %>
+              <%= hidden_field_tag "#{field_name}[usage_example]", assessment.usage_example %>
+              <%= hidden_field_tag "#{field_name}[usage_example_translation]", assessment.usage_example_translation %>
               <%= label_tag "#{field_name}[grammar_assessment_choice_id]", t("analyses.grammar_assessment_label"), class: "label" %>
               <%= select_tag "#{field_name}[grammar_assessment_choice_id]",
                     options_from_collection_for_select(grammar_assessment_choices, :id, :label, assessment.grammar_assessment_choice_id),

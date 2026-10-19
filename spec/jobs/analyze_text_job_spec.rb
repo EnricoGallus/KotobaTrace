@@ -15,7 +15,7 @@ RSpec.describe AnalyzeTextJob, type: :job do
       collection = Flashcards::VocabularyCollection.new([ "猫" ], checked: true)
       broadcast_locals = nil
 
-      allow(Japanese::TextAnalyzer).to receive(:call).with("猫").and_return(analysis)
+      allow(Japanese::TextAnalyzer).to receive(:call).with("猫", output_language: "ja").and_return(analysis)
       allow(Flashcards::VocabularyLookup).to receive(:call).and_return(collection)
 
       expect(Turbo::StreamsChannel).to receive(:broadcast_update_to) do |stream, target:, partial:, locals:|

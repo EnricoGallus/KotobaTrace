@@ -4,7 +4,7 @@ class WordAssessment < ApplicationRecord
   belongs_to :assessment_choice, optional: false
 
   attribute :in_flashcards, :boolean
-  attr_accessor :surfaces, :surface_readings
+  attr_accessor :surfaces, :surface_readings, :translation, :example_sentence, :example_translation
 
   accepts_nested_attributes_for :word
 

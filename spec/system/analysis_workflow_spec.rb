@@ -78,6 +78,73 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(Analysis.last.word_assessments.where(assessment_choice: choice)).to exist
   end
 
+  [ [ 1280, 900 ], [ 390, 844 ] ].each do |width, height|
+    it "reviews both tabs and validates hidden assessments before saving at #{width}px" do
+      page.driver.browser.manage.window.resize_to(width, height)
+      vocabulary_choice = AssessmentChoice.create!(key: "known", position: 4)
+      grammar_choice = GrammarAssessmentChoice.create!(key: "understood", position: 3)
+      allow(Japanese::TextAnalyzer).to receive(:call) do |text|
+        analysis = deterministic_analysis(text)
+        analysis.grammar_assessments.build(
+          pattern: "〜ている", meaning: "ongoing action",
+          explanation: "Describes an action in progress.", example: "食べている"
+        )
+        analysis
+      end
+      open_analysis
+      submit_text("食べている")
+      perform_enqueued_jobs
+
+      expect(page).to have_css('[role="tab"][aria-selected="true"]', text: /Vocabulary\s+1/)
+      expect(page).to have_no_css("#grammar-panel", visible: true)
+      find('#vocabulary-tab').send_keys(:arrow_right)
+      expect(page).to have_css('[role="tab"][aria-selected="true"]', text: /Grammar\s+1/)
+      expect(page).to have_text("ongoing action")
+      expect(page).to have_no_css("#vocabulary-panel", visible: true)
+
+      # Saving from Grammar must reveal the first missing vocabulary choice.
+      click_button "Save"
+      expect(page).to have_css('#vocabulary-tab[aria-selected="true"]')
+      expect(page).to have_css("#vocabulary-panel select:focus")
+      first("tbody select").select(vocabulary_choice.label)
+      click_button "Save"
+      expect(page).to have_css('#grammar-tab[aria-selected="true"]')
+      expect(page).to have_css("#grammar-panel select:focus")
+      select grammar_choice.label, from: "Grammar assessment"
+
+      find('#grammar-tab').send_keys(:home)
+      expect(first("tbody select").value).to eq(vocabulary_choice.id.to_s)
+      find("#grammar-tab").click
+      expect(find("#grammar-panel select").value).to eq(grammar_choice.id.to_s)
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
+      FileUtils.mkdir_p(Rails.root.join("tmp", "design-review"))
+      page.save_screenshot(Rails.root.join("tmp", "design-review", "grammar-tab-#{width}.png"))
+      click_button "Save"
+
+      expect(page).to have_text("Your analysis results will appear here")
+      expect(Analysis.last.word_assessments.sole.assessment_choice).to eq(vocabulary_choice)
+      expect(Analysis.last.grammar_assessments.sole.grammar_assessment_choice).to eq(grammar_choice)
+    end
+  end
+
+  it "opens the grammar tab directly for a grammar-only analysis in Japanese" do
+    allow(Japanese::TextAnalyzer).to receive(:call) do |text|
+      analysis = Analysis.new(text: text)
+      analysis.grammar_assessments.build(
+        pattern: "〜としても", meaning: "たとえ〜でも",
+        explanation: "仮定の条件を表す。", example: "としても"
+      )
+      analysis
+    end
+    open_analysis("ja")
+    submit_text("としても", "解析")
+    perform_enqueued_jobs
+
+    expect(page).to have_css('[role="tab"][aria-selected="true"]', text: /文法\s+1/)
+    expect(page).to have_text("仮定の条件を表す。")
+    expect(page).to have_no_css("#vocabulary-tab")
+  end
+
   it "requires a choice for every word and skips ignored words on save" do
     known = AssessmentChoice.create!(key: "known", position: 4)
     ignore = AssessmentChoice.create!(key: "ignore", position: 0)
@@ -113,7 +180,7 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[採用 残業代 付く 流行る 気持ち 面 流行り 乗る 精神的 鼠 かじる 対策 専業主婦 家庭 節約 工夫 実践 返却日 意見交換 間接的 政治的]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(2)").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
     expect(find("tbody tr", text: "流行ってる").find("td:nth-child(3)").text).to eq("ハヤッテル")
     expect(find("tbody tr", text: "政治的").find("td:nth-child(4)").text).to eq("形容動詞")
 
@@ -134,7 +201,7 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[問題 目を向ける はるかに 大きい]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(2)").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
     expression_row = find("tbody tr", text: "目を向けた")
     expect(expression_row.find("td:nth-child(3)").text).to eq("メヲムケタ")
     expect(expression_row.find("td:nth-child(4)").text).to eq("表現")
