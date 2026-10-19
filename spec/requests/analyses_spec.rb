@@ -303,7 +303,7 @@ RSpec.describe "Analyses", type: :request do
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
       expect(response.body).to include('<turbo-stream action="update" target="analysis_results">')
       expect(response.body).to include("Assessment choice", "Katze", "猫がいる。", "Da ist eine Katze.", 'lang="de"')
-      expect(Nokogiri::HTML(response.body).css("tbody tr td")[3].text.strip).to eq("ネコ")
+      expect(Nokogiri::HTML(response.body).css("tbody tr td")[2].text.strip).to eq("ネコ")
       expect(Analysis.count).to eq(0)
     end
   end

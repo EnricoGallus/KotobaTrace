@@ -11,7 +11,7 @@ RSpec.describe "analyses/_results", type: :view do
     render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [], grammar_assessment_choices: [] }
 
     cells = Nokogiri::HTML(rendered).css("tbody tr td")
-    expect(cells[3].text.strip).to eq("キサイサレタ")
+    expect(cells[2].text.strip).to eq("キサイサレタ")
     expect(word.dictionary_reading).to eq("キサイサ")
     expect(Nokogiri::HTML(rendered).at_css('input[name$="[dictionary_reading]"]')).to be_nil
   end
@@ -27,7 +27,7 @@ RSpec.describe "analyses/_results", type: :view do
       analysis: analysis, assessment_choices: [], grammar_assessment_choices: []
     }
 
-    expect(Nokogiri::HTML(rendered).css("tbody tr td")[3].text.strip).to eq("")
+    expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
   end
 
   it "does not present a saved dictionary reading as an encountered reading when none was supplied" do
@@ -38,7 +38,7 @@ RSpec.describe "analyses/_results", type: :view do
 
     render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
 
-    expect(Nokogiri::HTML(rendered).css("tbody tr td")[3].text.strip).to eq("")
+    expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
   end
 
   { true => "In flashcards", false => "Not in flashcards", nil => "Not checked" }.each do |membership, label|
@@ -54,7 +54,9 @@ RSpec.describe "analyses/_results", type: :view do
       }
 
       document = Nokogiri::HTML(rendered)
-      expect(document.css("tbody tr td")[4].at_css("[title]")["title"]).to eq(label)
+      meaning_cell = document.css("tbody tr td")[1]
+      expect(meaning_cell.at_css("[data-flashcard-status]").text).to include(label)
+      expect(meaning_cell.text.gsub(/\s+/, " ")).to include("Prior encounters: 0")
       expect(document.at_css('input[name="analysis[word_assessments_attributes][0][in_flashcards]"]')).to be_present
     end
   end

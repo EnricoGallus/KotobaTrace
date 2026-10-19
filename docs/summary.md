@@ -24,34 +24,36 @@ A user pastes either:
 1. Japanese text, such as an article, JLPT reading passage, book excerpt, or lesson material.
 2. A list of Japanese vocabulary.
 
-KotobaTrace analyzes the input and produces learner-facing vocabulary candidates.
+KotobaTrace uses AI to extract vocabulary and grammar from the submitted source.
+The implemented review flow has separate tabs and one shared **Save all** action.
 
-For every candidate, the application should eventually be able to show information such as:
+Vocabulary displays encountered form, base form and contextual translation,
+encountered reading, and learner assessment. Flashcard status and prior encounters
+sit inside the base-form cell. Part of speech remains part of word identity but
+is not shown in its own column. Usage examples are expandable in both tabs;
+grammar's original source excerpt stays distinct from its generated example.
 
-- surface form as encountered in the source text
-- normalized/base form
-- reading
-- part of speech
-- meaning/translation when available
-- how many times the learner has encountered it
-- how often they marked it known or unknown
-- previous example contexts
-- optional Anki information
-- later, related grammar information
+The application supports English, Japanese, German, and Vietnamese. The language
+menu controls both interface text and AI translations/explanations. Japanese
+forms and example sentences remain Japanese. `Japanese::TextAnalyzer` accepts an
+explicit `output_language:` parameter; it does not select a language with a
+Japanese/English conditional inside the prompt.
 
-The learner can classify vocabulary, initially with states such as:
+Vocabulary choices are Ignore, Don't know yet, Reading only, Meaning only, and
+Know both. Grammar choices are Ignore, Don't know this pattern yet, Partly
+understand, and Understand. Every item must have a choice before saving either
+tab. Invalid submission shows remaining counts and a message without changing the
+user's tab. Bulk vocabulary assessment fills only unselected choices.
 
-- Known
-- Unknown
-- Ignore
+Successful analysis collapses the input without clearing it. The source can be
+reopened for editing. The compact app bar contains the product name and language
+menu; a shared sticky footer saves both result types together. Word history opens
+in place without losing the current review.
 
-More nuanced states may be introduced later, for example:
-
-- Can read but do not know the meaning
-- Know meaning but cannot read
-- Unsure
-
-Selections are persisted so KotobaTrace gradually builds a personal vocabulary history.
+Selections and original source text are persisted on explicit save. An Ignore
+choice skips creating that item's new assessment; it does not erase existing
+history or permanently suppress future suggestions. An all-ignored submission
+can still save the source analysis.
 
 Repeated failure matters more than simply being absent from a flashcard deck.
 
@@ -82,7 +84,7 @@ The local `Japanese::MorphologicalAnalyzer` and `Japanese::VocabularyExtractor`
 remain separately testable services; they are not currently called by the
 user-facing analysis flow.
 
-A future contextual layer may also exist:
+The separate local pipeline also has a candidate-level contextual layer:
 
     VocabularyExtractor
         ↓
@@ -180,10 +182,24 @@ containing word assessments grouped by lemma and part of speech, plus distinct
 grammar assessments. Grammar assessments preserve the pattern, source example,
 meaning, and contextual explanation independently from vocabulary records.
 
-The response schema and prompt should keep the model grounded in the submitted
-passage: vocabulary surfaces and grammar examples must come from that source.
-Readings and explanations are generated analysis and can be wrong; do not treat
-them as authoritative dictionary data.
+The schema and prompt require source-grounded vocabulary surfaces and grammar
+source excerpts. Teaching examples are explicitly newly generated sentences and
+must be presented separately from source quotations. The prompt requests full
+lexical coverage, normalization of inflected forms, and vocabulary extraction
+independently of grammar extraction, including reported omission examples.
+
+Vocabulary translations, generated sentences and their translations, encountered
+forms/readings, flashcard membership, and output language are temporary review
+attributes. Grammar's additional generated usage example and translation are also
+temporary. They survive a validation-error rerender via form fields, but are not
+persisted. Existing grammar fields (pattern, source excerpt, meaning, explanation)
+are saved with the learner's choice. Preserve this boundary unless a product
+requirement explicitly changes it.
+
+Readings, translations, explanations, and generated examples can be wrong. They
+are not authoritative dictionary data. Mocked structured-response specs verify
+application behavior, not live model accuracy or latency. Maintain a separate
+real-material evaluation before declaring extraction quality solved.
 
 The deterministic local pipeline remains useful for focused extraction tests
 and can be reintroduced behind this service boundary if needed. Do not assume it
@@ -303,7 +319,9 @@ Prefer structures that could eventually support:
     language: "vi"
     language: "de"
 
-Vietnamese may become an important future learner language, but it is not part of the current MVP.
+English, Japanese, German, and Vietnamese are already supported for the interface
+and AI output. Dictionary-backed senses in those languages remain a separate,
+future enrichment feature.
 
 ## Personal learning history
 
@@ -339,12 +357,10 @@ extraction. Further AI features should enhance the learner's existing history
 without replacing saved learner assessments or presenting generated material as
 authoritative dictionary data.
 
-Potential uses include:
+Contextual vocabulary translations, grammar explanations, and generated usage
+examples are already part of the current review. Further uses include:
 
-- contextual disambiguation
-- explanations of vocabulary in context
-- grammar explanations
-- generated example sentences
+- contextual disambiguation and correction assistance
 - personalized reading exercises
 - multiple-choice questions
 - exercises built around words or grammar the learner repeatedly fails
@@ -389,21 +405,33 @@ The project is also intentionally being used to gain practical experience with:
 
 Use those technologies where they naturally solve the problem rather than artificially forcing them into the codebase.
 
-A natural analysis flow is:
+The implemented analysis flow is:
 
-    user submits text
+    user submits source text in the selected application locale
         ↓
-    background job calls Japanese::TextAnalyzer
+    request enqueues AnalyzeTextJob and responds 202 Accepted
         ↓
-    RubyLLM returns schema-constrained vocabulary and grammar
+    Japanese::TextAnalyzer calls RubyLLM for structured vocabulary and grammar
         ↓
-    learner reviews and assesses both result types
+    optional flashcard lookup enriches the unsaved analysis
         ↓
-    Rails saves the analysis and assessments
+    a Turbo Stream broadcasts the results to the page's subscription
         ↓
-    Turbo Stream updates analysis results
+    learner reviews both tabs; Stimulus handles local review behavior
         ↓
-    Stimulus handles immediate client-side interaction
+    Save all posts the assessments; Rails validates and saves together
+
+Connection readiness and enqueue acknowledgment are different from job
+completion. The browser waits for its subscription, retains progress after
+acknowledgment, and matches terminal streams by request ID. It accepts a late
+completion of the current request after timeout and rejects superseded requests.
+The timeout unlocks the form; it does not cancel server work.
+
+Jobs log analyzing, flashcard lookup, broadcasting, and completion stages. A
+completed broadcast still does not prove browser receipt. Refresh recovery,
+durable result retrieval, cancellation, and draft recovery are not implemented.
+Development's async job and cable adapters are process-local; production worker
+and cable configuration require actual deployment verification.
 
 Stimulus should generally handle browser behavior such as:
 
@@ -437,7 +465,7 @@ Avoid replacing Turbo with manual fetch requests unless there is a concrete reas
 
 ## Current product direction
 
-The immediate goal is a usable vocabulary- and grammar-analysis workflow:
+The core vocabulary and grammar review workflow is implemented:
 
     paste Japanese text
         ↓
@@ -453,11 +481,14 @@ The immediate goal is a usable vocabulary- and grammar-analysis workflow:
         ↓
     save encounter history
 
-Once this works well with real N2 study material, expand into:
+Next, validate the live analysis loop with real N2 material, fix reliability and
+correction gaps, and use several actual study sessions to choose further work.
+See [next-steps.md](next-steps.md) for the actionable sequence and acceptance
+criteria. Then expand into:
 
     Study Inbox
         ↓
-    grammar history and correction tools
+    grammar history
         ↓
     dictionary enrichment
         ↓

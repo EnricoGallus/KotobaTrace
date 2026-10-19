@@ -66,11 +66,9 @@
     <table class="table vocabulary-table">
       <thead>
         <tr>
-          <th title="<%= t("word_history.saved_only") %>"><%= t("analyses.columns.passages") %></th>
           <th><%= t("analyses.columns.surface") %></th>
           <th><%= t("analyses.columns.base_form") %></th>
           <th><%= t("analyses.columns.reading") %></th>
-          <th><%= t("analyses.columns.flashcards") %></th>
           <th><%= t("analyses.columns.assessment") %></th>
         </tr>
       </thead>
@@ -82,7 +80,6 @@
           <% word_field_name = "#{field_name}[word_attributes]" %>
 
           <tr class="hover:bg-base-200">
-            <td class="tabular-nums" data-passage-count><%= passage_counts.fetch(word&.id, 0) %></td>
             <td lang="ja" class="text-lg font-medium">
               <% assessment.surfaces.to_a.each_with_index do |surface, surface_index| %>
                 <% if surface_index.positive? %><span>, </span><% end %>
@@ -90,8 +87,8 @@
                 <%= hidden_field_tag "#{field_name}[surfaces][]", surface %>
               <% end %>
             </td>
-            <td lang="ja">
-              <button type="button" class="link link-primary" aria-haspopup="dialog"
+            <td>
+              <button type="button" lang="ja" class="link link-primary" aria-haspopup="dialog"
                       data-action="word-history#open"
                       data-word-history-url="<%= word_history_path(lemma: word&.lemma, part_of_speech: word&.part_of_speech) %>">
                 <%= word&.lemma %>
@@ -101,13 +98,29 @@
                   <p lang="<%= output_language %>"><%= assessment.translation %></p>
                 <% end %>
                 <% if assessment.example_sentence.present? %>
-                  <details>
+                  <details class="usage-example">
                     <summary><%= t("analyses.usage_example") %></summary>
                     <p lang="ja"><%= assessment.example_sentence %></p>
                     <p lang="<%= output_language %>"><%= assessment.example_translation %></p>
                   </details>
                 <% end %>
               </div>
+              <div class="vocabulary-metadata">
+                <span class="vocabulary-flashcards" data-flashcard-status title="<%= t("analyses.columns.flashcards") %>">
+                  <% case assessment.in_flashcards %>
+                  <% when true %>
+                    <span class="flashcards-included"><%= t("analyses.flashcard_status.included") %></span>
+                  <% when false %>
+                    <%= t("analyses.flashcard_status.not_included") %>
+                  <% else %>
+                    <%= t("analyses.columns.flashcards") %>: <%= t("analyses.flashcard_status.not_checked") %>
+                  <% end %>
+                </span>
+                <span title="<%= t("word_history.saved_only") %>">
+                  <%= t("analyses.columns.passages") %>: <span class="tabular-nums" data-passage-count><%= passage_counts.fetch(word&.id, 0) %></span>
+                </span>
+              </div>
+              <%= hidden_field_tag "#{field_name}[in_flashcards]", assessment.in_flashcards %>
               <% %i[translation example_sentence example_translation].each do |attribute| %>
                 <%= hidden_field_tag "#{field_name}[#{attribute}]", assessment.public_send(attribute) %>
               <% end %>
@@ -119,17 +132,6 @@
               <% readings.each do |reading| %>
                 <%= hidden_field_tag "#{field_name}[surface_readings][]", reading %>
               <% end %>
-            </td>
-            <td>
-              <% case assessment.in_flashcards %>
-              <% when true %>
-                <span class="badge badge-success badge-sm" title="<%= t("analyses.flashcard_status.included") %>">✓</span>
-              <% when false %>
-                <span class="badge badge-ghost badge-sm" title="<%= t("analyses.flashcard_status.not_included") %>">✗</span>
-              <% else %>
-                <span class="membership-unchecked" title="<%= t("analyses.flashcard_status.not_checked") %>"><%= t("analyses.flashcard_status.not_checked") %></span>
-              <% end %>
-              <%= hidden_field_tag "#{field_name}[in_flashcards]", assessment.in_flashcards %>
             </td>
             <td>
               <%= hidden_field_tag "#{word_field_name}[lemma]", word&.lemma %>
@@ -177,11 +179,11 @@
               <p lang="<%= output_language %>"><strong><%= assessment.meaning %></strong></p>
               <p lang="<%= output_language %>"><%= assessment.explanation %></p>
               <% if assessment.usage_example.present? %>
-                <div class="grammar-usage-example">
-                  <p class="learning-detail-label"><%= t("analyses.usage_example") %></p>
+                <details class="grammar-usage-example usage-example">
+                  <summary><%= t("analyses.usage_example") %></summary>
                   <p lang="ja"><%= assessment.usage_example %></p>
                   <p lang="<%= output_language %>"><%= assessment.usage_example_translation %></p>
-                </div>
+                </details>
               <% end %>
             </div>
             <div class="grammar-assessment-choice">

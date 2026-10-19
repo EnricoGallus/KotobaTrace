@@ -5,8 +5,10 @@ This roadmap starts from the current application and follows the direction in
 principles; this document owns delivery order, progress, and acceptance criteria.
 See the [README](../README.md) for setup and current capabilities.
 
-The first target is a personally useful vocabulary workflow for real JLPT N2
-study. Grammar, public hosting, OCR, and native apps follow evidence from use.
+The first target is a personally useful vocabulary and grammar workflow for real
+JLPT N2 study. The review screen, shared saving, translations, generated examples,
+and four-language interface are implemented. Public hosting, OCR, and native apps
+follow evidence from use.
 Previous cumulative estimates and week-by-week schedules have been removed:
 they assumed an application that had not yet been built and a different analysis
 architecture. Estimate each remaining milestone when its scope is concrete.
@@ -17,20 +19,33 @@ Implemented foundations:
 
 - Rails 8.1, Ruby 4, PostgreSQL, Hotwire, esbuild, Tailwind CSS/DaisyUI, and RSpec.
 - Japanese text input, background analysis, Turbo Stream results, and Stimulus
-  submission controls, with English and Japanese UI translations.
+  submission controls, with English, Japanese, German, and Vietnamese UI text.
+  The application locale also selects AI translation/explanation language.
 - `Japanese::TextAnalyzer`, using RubyLLM with a Schematist schema to produce
   grouped vocabulary assessments and grammar assessments with source examples,
-  meanings, and contextual explanations.
+  meanings, contextual explanations, vocabulary translations, and generated
+  teaching examples with translations. Source excerpts and generated examples
+  are separate.
 - `Japanese::MorphologicalAnalyzer`, which wraps MeCab/Natto and returns raw
   `Japanese::Morpheme` objects with morphological metadata and sequence positions;
   this deterministic pipeline remains available but is separate from the current
   user-facing analyzer.
 - `Japanese::VocabularyExtractor`, with ordered rules for names/honorifics,
   numbers/counters, time expressions, suru verbs, verbs, and content words.
-- Vocabulary candidates retaining the morphemes they came from; the results UI
-  currently displays only candidates whose kind is `:vocabulary`.
-- Results grouped by base form and part of speech, displaying encountered forms,
-  readings, and Anki membership.
+- Local vocabulary candidates retain their source morphemes; this behavior belongs
+  to the separate deterministic pipeline, not the current AI result path.
+- AI vocabulary grouped by base form and part of speech. The compact table shows
+  encountered form, base form/meaning, reading, and assessment; flashcard status
+  and labeled prior encounters sit within the base-form cell. POS is retained as
+  identity/submitted data without a visible column.
+- Vocabulary and grammar tabs with a shared sticky Save all action, remaining
+  assessment counts, and validation feedback that keeps the selected tab in place.
+- Bulk vocabulary assessment below the table, filling only unselected choices;
+  collapsible teaching examples in both tabs; source input collapses on success
+  and can be reopened. The app bar holds the brand and language menu.
+- Stream connection waiting, job-completion loading state, recoverable failures,
+  and request-ID filtering. Late current results remain renderable after browser
+  timeout; superseded results are ignored. Job stages and elapsed time are logged.
 - Optional, provider-neutral flashcard lookup through `Flashcards::VocabularyLookup`,
   using `Anki::VocabularyIndex` for Anki and an empty, unchecked collection on failure.
   One provider is selected via environment configuration.
@@ -47,15 +62,24 @@ Implemented foundations:
 
 Important gaps:
 
-- Flashcard lookup scans the configured Anki deck on each analysis; settings UI,
-  snapshots, and other flashcard providers are not implemented. Failed enrichment
-  no longer prevents analysis or saving.
-- Extracted occurrences remain separate until the job groups them. Saved data
-  has one assessment per word per analysis, without individual occurrence
-  positions or within-passage counts, by design. The original passage is saved;
-  displayed surfaces/readings and flashcard membership remain transient.
-- A Study Inbox, dictionary meanings, learner corrections, grammar history views,
-  and accounts are not implemented. Current history belongs to the single-user app.
+- Live AI output still needs a repeatable evaluation of omitted vocabulary,
+  normalization, readings, grammar grounding, translations, latency, and cost.
+  Prompt examples and mocked responses do not establish provider quality.
+- Job stages are logged, but stalled calls, lost broadcasts, and server restarts
+  still need real-use diagnosis. There is no durable result retrieval, browser
+  refresh recovery, cancellation, or saved-draft workflow.
+- Flashcard lookup scans the configured Anki deck on each analysis. Settings UI,
+  snapshots, and other providers are not implemented. Failure does not block saving.
+- Vocabulary encountered forms/readings, translations, generated examples and their
+  translations, output language, and membership are temporary. Grammar's extra
+  generated usage example/translation are temporary too. Saved grammar source
+  excerpts, meanings, and explanations remain persistent. This is intentional.
+- The Study Inbox, dictionary-backed meanings, learner corrections, grammar-history
+  screens, and accounts are not implemented. History belongs to the single-user app.
+- Phone layouts are exercised in browser tests, but vocabulary still requires
+  horizontal scrolling; there is no dedicated mobile card layout.
+
+See [next-steps.md](next-steps.md) for the prioritized near-term queue.
 
 ## Analysis boundary for all milestones
 
@@ -78,29 +102,30 @@ testable services. Do not treat them as the current user-facing analysis path.
 
 ### Remaining work
 
-- Exercise extraction against real N2 passages and vocabulary lists. Add focused
-  regression examples for useful rule improvements.
-- Keep specific extraction rules ahead of generic fallback rules; preserve raw
-  metadata and duplicate occurrences through extraction.
-- Confirm optional flashcard enrichment during actual study with Anki open and
-  closed. The service fallback, “not checked” state, and environment-based
-  provider/deck/field configuration are implemented and covered by specs.
-- Confirm the implemented blank-input rejection, no-vocabulary guidance, and
-  localized failure/retry feedback during real use. Progress now follows terminal
-  job results, with request IDs preventing stale updates. Browser specs cover the
-  complete workflow and optional flashcard outage notices.
-- Continue reviewing context-dependent readings. Encountered readings now remain
-  transient and do not initialize dictionary readings. Source-aware suffix,
-  compound and contracted-verb grouping has regression coverage; see
-  [Vocabulary grouping](vocabulary-grouping.md) for its evidence requirements,
-  supported lexical entries and extension process.
+- Complete the reliability and live-quality checks in [next-steps.md](next-steps.md).
+  Use representative N2 passages, comma-separated lists, and the seven reported
+  omission cases. Record model/prompt revision, coverage, reading/translation
+  errors, completion time, and available token/cost data.
+- Confirm actual browser delivery after long analysis and reconnects, with Anki
+  open, closed, and disabled. Diagnose the last logged job stage before changing
+  client code. A 202 response or cable upgrade is not analysis completion.
+- Validate that successful saves preserve both assessment types and that failures
+  preserve the current review. Test locale output in all four languages with
+  appropriate language review, not just translated interface strings.
+- Choose and implement the smallest recovery mechanism for missing broadcasts or
+  interrupted sessions while preserving the temporary-field persistence boundary.
+- Keep MeCab-specific grouping changes within the separate local pipeline. Its
+  lexical-rule tests are not a substitute for live TextAnalyzer evaluation.
 
 ### Acceptance criteria
 
-A learner can paste a real passage, receive useful vocabulary candidates, select
-assessments, and save the result with Anki either available or unavailable.
-Analysis failures are visible and recoverable. Morphological ambiguities are
-recorded as limitations rather than patched with learner-specific analyzer rules.
+A learner can paste a real passage, receive useful vocabulary and grammar,
+review translations and clearly separated teaching examples, select assessments
+in both tabs, and save together with Anki available or unavailable. The selected
+application language controls explanations. Analysis failures are visible and
+recoverable; delivery and quality are verified with actual provider/browser runs.
+Morphological ambiguities are recorded as limitations rather than patched with
+learner-specific analyzer rules.
 
 ## Milestone 2 — Preserve Encounters and Show Personal History
 
@@ -171,7 +196,8 @@ Ignoring a word creates no new encounter or assessment for that passage.
 
 ## Checkpoint A — Use the Personal MVP
 
-**Status: planned. Complete before expanding into larger features.**
+**Status: ready for an initial real-use pass once reliability is confirmed;
+repeat after the Study Inbox is implemented.**
 
 Use the app during 5–7 days of actual reading, grammar-book, and kanji-book study.
 Record:
@@ -180,7 +206,8 @@ Record:
 2. Friction in pasting, extraction, assessment, and saving.
 3. Whether encounter history changes what gets studied next.
 4. Whether optional Anki information helps.
-5. Whether the inbox is more useful than collecting every unfamiliar word.
+5. Which recurring words should enter the planned inbox; once it exists, whether
+   its shortlist is more useful than collecting every unfamiliar word.
 6. The single largest obstacle to continued use.
 
 The personal MVP is the working loop:
@@ -211,7 +238,10 @@ accuracy evaluation and correction tools remain.**
 
 `Japanese::TextAnalyzer` extracts passage-grounded grammar constructs alongside
 vocabulary. Each `GrammarAssessment` stores its pattern, source example, meaning,
-explanation, and learner choice separately from vocabulary concepts. Validate
+explanation, and learner choice separately from vocabulary concepts. Additional
+Japanese teaching examples and translations are displayed in collapsible sections
+and remain temporary. Grammar shares the same review/save workflow as vocabulary;
+a dedicated recurrence/history view is still planned. Validate
 the extraction against real study passages and add correction or manual-entry
 support if actual use requires it.
 
@@ -222,16 +252,19 @@ is outside this milestone.
 
 ## Milestone 6 — Optional Dictionary Enrichment and Search
 
-**Status: planned; move earlier only if study sessions show meanings are essential.**
+**Status: dictionary-backed enrichment is planned. Contextual AI vocabulary
+translations and examples are already implemented.**
 
 Introduce a small dictionary boundary, such as `Dictionary::Lookup.call(word)`.
 Evaluate a hosted provider or a focused JMdict integration before committing to a
 large ingestion system. Keep dictionary source data separate from personal
 history, and account for attribution and licensing when choosing a provider.
 
-Add meanings, dictionary readings, and relevant senses to vocabulary review.
+Add attributed dictionary meanings, dictionary readings, and relevant senses to
+vocabulary review alongside the existing generated contextual translations.
 Standalone search by Japanese writing/reading, and meaning where practical, can
-reuse that boundary. Keep translation structures open to future learner languages.
+reuse that boundary. Keep dictionary translation structures compatible with all four current learner
+languages and extensible to additional languages.
 
 **Acceptance criteria:** dictionary results enrich personal vocabulary history;
 provider failures do not prevent analysis, assessment, or saving.
@@ -300,6 +333,8 @@ workflow without developer assistance, with tested data ownership and recovery.
 
 ## Recommended Next Action
 
-Complete Milestone 1's remaining real-material validation and reading correctness,
-then validate the passage-history workflow and define Milestone 3's inbox ranking. Continue refining extraction from real examples
-without moving learner-oriented rules into `MorphologicalAnalyzer`.
+Follow [next-steps.md](next-steps.md): prove the live analyze → review → Save all
+loop, establish a small AI evaluation set, then add learner correction and review
+recovery based on observed friction. Use the app during real study before
+committing to a larger feature. Build the Study Inbox from existing saved
+encounters once these foundations are trustworthy.

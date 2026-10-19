@@ -195,11 +195,11 @@
   .input-body { min-inline-size: 0; padding: clamp(1rem, 3vw, 1.75rem); }
   .input-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 650; }
   .analysis-input textarea { display: block; width: 100%; max-width: 100%; min-height: 12rem; font-size: 1rem; line-height: 1.8; background: var(--color-base-100); }
-  .vocabulary-learning-details { min-width: 12rem; max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
+  .vocabulary-learning-details { min-width: 10rem; max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
   .vocabulary-learning-details:empty { display: none; }
   .vocabulary-learning-details p { margin-top: 0.4rem; font-size: 0.9rem; }
-  .vocabulary-learning-details details { margin-top: 0.5rem; }
-  .vocabulary-learning-details summary { cursor: pointer; font-size: 0.8rem; color: var(--color-primary); }
+  .usage-example { margin-top: 0.5rem; }
+  .usage-example summary { cursor: pointer; font-size: 0.8rem; color: var(--color-primary); }
   .grammar-usage-example { margin-top: 0.8rem; padding-top: 0.5rem; border-top: 1px solid var(--color-base-300); }
   .grammar-assessment-content .learning-detail-label { font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); }
   .analysis-input .card-actions { display: flex; margin-top: 1rem; }
@@ -225,12 +225,14 @@
   .assessment-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; padding: 1rem 1.5rem 1.5rem; }
   .assessment-toolbar .label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; }
   .vocabulary-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-block: 1px solid var(--color-base-300); }
-  .vocabulary-table { width: 100%; min-width: 56rem; }
+  .vocabulary-table { width: 100%; min-width: 42rem; }
   .vocabulary-table thead { background: color-mix(in srgb, var(--color-base-200) 65%, var(--color-base-100)); }
   .vocabulary-table th { font-size: 0.75rem; font-weight: 650; white-space: nowrap; color: var(--color-base-content); padding-block: 1rem; }
-  .vocabulary-table td { padding-block: 1rem; }
-  .vocabulary-table select { min-width: 12rem; }
-  .membership-unchecked { font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); white-space: nowrap; }
+  .vocabulary-table td { padding-block: 0.75rem; vertical-align: top; }
+  .vocabulary-table select { min-width: 11rem; }
+  .vocabulary-metadata { display: flex; flex-wrap: wrap; gap: 0.15rem 0.8rem; margin-top: 0.5rem; font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 70%, transparent); }
+  .vocabulary-metadata > span { white-space: nowrap; }
+  .flashcards-included { color: var(--color-success); font-weight: 600; }
   .results-footer { position: sticky; bottom: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; border-top: 1px solid var(--color-base-300); background: var(--color-base-100); }
   .results-footer p { max-width: 32rem; font-size: 0.8rem; color: var(--color-rest); }
   .results-footer .btn { flex-shrink: 0; }

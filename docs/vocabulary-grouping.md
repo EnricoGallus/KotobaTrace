@@ -1,5 +1,11 @@
 # Vocabulary grouping
 
+This document describes the deterministic MeCab/Natto extraction pipeline. The
+current user-facing analyzer is `Japanese::TextAnalyzer` using RubyLLM; it does
+not call this pipeline. These rule guarantees and regression tests must not be
+presented as guarantees of live AI output. See [summary.md](summary.md) for the
+active analysis path and [next-steps.md](next-steps.md) for AI evaluation cases.
+
 The tokenizer supplies evidence; extraction rules decide what is useful to assess
 as one word. Grouping is deliberately conservative: missing a compound is easier
 to review than merging unrelated words and recording the wrong assessment.
@@ -12,7 +18,8 @@ The extractor partitions tokens wherever offsets reveal intervening whitespace.
 Spaces, tabs, line breaks and punctuation prevent rules from joining across them.
 Japanese full-width spaces may themselves be raw symbol tokens; rules stop at those
 too. Every candidate retains its complete source morphemes and exact encountered
-surface. Repeated occurrences remain separate until the result screen groups them.
+surface. Repeated occurrences remain separate in the extractor output; its consumer can
+group candidates for review.
 
 ## Evidence for a group
 

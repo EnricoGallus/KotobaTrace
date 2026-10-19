@@ -9,35 +9,50 @@ that helps you choose what to study next, especially words you repeatedly miss.
 
 ## Current Status
 
-KotobaTrace is an early, local-development application. The current workflow is:
+KotobaTrace is a single-user application for local study. The core review and
+save workflow is implemented; live AI quality and operational reliability still
+need evaluation during real study sessions.
 
-1. Paste Japanese text and select **Analyze**.
-2. Review vocabulary, grammar patterns, encountered forms, readings, and local
-   Anki membership.
-3. Choose a vocabulary assessment, and rate grammar as Ignore, Don't know,
-   Partly understand, or Understand.
-4. Save the analysis and assessments.
+1. Choose the application language: English, Japanese, German, or Vietnamese.
+   The same selection controls AI translations and explanations; there is no
+   separate output-language dropdown.
+2. Paste Japanese text or a vocabulary list and select **Analyze**.
+3. Review **Vocabulary** and **Grammar** tabs. Vocabulary has four columns:
+   encountered form, base form and meaning, encountered reading, and assessment.
+   Flashcard status and labeled prior encounters appear inside the base-form cell.
+4. Expand optional Japanese usage examples and their translations. Grammar also
+   shows its exact source excerpt separately from the generated teaching example.
+5. Assess both tabs and select the shared **Save all** action. Missing choices
+   show remaining counts and a message without switching tabs. Bulk vocabulary
+   assessment is below the table and fills only unselected choices.
 
-Analysis runs as a background job and updates the results through Turbo Streams.
-Progress remains active until the job finishes. Blank input is rejected, failures
-keep the original text with a retry action, and empty results explain what to try.
-A flashcard lookup failure shows an informational notice without blocking saving.
-The analysis uses Gemini through RubyLLM and returns schema-structured vocabulary
-and grammar results. Results group vocabulary by normalized form and part of speech.
+The app bar contains the application name and language menu. Successful results
+collapse the source input; reopen it to edit and analyze again. A shared sticky
+save footer remains available while reviewing. The vocabulary table still scrolls
+horizontally on narrow screens.
 
-Results show how many saved passages contained each word. Click its base form
-for a dialog with first/last encounter dates, assessment totals, every saved
-assessment and passage, and available flashcard note details. The current draft
-is excluded from history. Repetitions within one passage count once.
+Analysis runs as a background job and delivers results through Action Cable and
+Turbo Streams. Blank input is rejected; errors preserve the text and offer retry.
+The browser waits up to 30 seconds for its stream subscription and allows up to
+ten minutes for job completion. A matching result arriving after the browser
+completion timeout can still render; a result from a superseded request is ignored.
+The browser timeout does not cancel the background job. Results are not durably
+stored for recovery after refresh, navigation, or a missed broadcast.
 
-A Study Inbox, dictionary meanings, and user accounts are planned. Vocabulary
-readings reflect encountered forms rather than dictionary forms. AI-generated
-vocabulary and grammar results can make mistakes.
+Click a vocabulary base form for its history dialog: first/last encounter dates,
+assessment totals, saved passages, and available flashcard note details. **Prior
+encounters** counts saved passages containing the word, once per passage. The
+current draft and repetitions within a passage do not increase that count.
+
+AI-generated meanings, readings, and examples can be wrong. See the
+[persistence boundary](#how-analysis-is-organized) for which fields are saved.
+Dictionary-backed meanings, learner corrections, the Study Inbox, grammar-history
+screens, and accounts remain planned.
 
 Flashcard enrichment is optional and uses one provider at a time. Anki is the
-current provider; unavailable connections return an empty, unchecked collection
-without preventing analysis or saving. Membership means an expression was found
-in the configured deck; it does not mean the learner knows the word.
+current provider. Disabled or failed lookup leaves membership unchecked and never
+blocks review or saving. Membership means the expression was found in the
+configured deck; it does not mean the learner knows the word.
 
 ## Stack
 
@@ -61,7 +76,8 @@ the supplied [.devcontainer](.devcontainer/devcontainer.json). It configures Rub
 Node tooling, PostgreSQL, MeCab with a Japanese dictionary, and Selenium.
 The post-create command runs `bin/setup --skip-server`.
 
-Inside the container, ensure assessment choices are seeded, then start the app:
+Set `GEMINI_API_KEY` in the environment used by Rails. Inside the container,
+ensure assessment choices are seeded, then start the app:
 
 ```sh
 bin/rails db:seed
@@ -118,6 +134,20 @@ Keep this file private; it is ignored by Git. Build and start the containers:
 ```sh
 docker compose --env-file .env.production.local -f docker-compose.production.yml up --build -d
 ```
+
+Server startup runs `bin/rails db:prepare db:seed`. This creates/migrates the
+database and refreshes the required vocabulary and grammar assessment choices,
+including when the database already exists. The seeds update choices by key and
+can be rerun without clearing saved analyses or history.
+
+To seed an already running container immediately:
+
+```sh
+docker compose --env-file .env.production.local -f docker-compose.production.yml exec web bin/rails db:seed
+```
+
+Rebuild the image with the `up --build -d` command above after changing the
+entrypoint or seeds; restarting an old image does not include updated files.
 
 To connect from the host, use PostgreSQL tools with host `127.0.0.1`, port
 `15432`, and user `kotoba_trace`. For example, back up the primary database:
@@ -197,10 +227,13 @@ bundle exec rspec
 ```
 
 The suite includes real MeCab examples, so the native library and compatible
-dictionary must be available. Anki integration in the specs uses test doubles;
-a running Anki instance is not required for the test suite. Browser system specs
-also cover progress, failure/retry, empty results, and saving. Build JavaScript
-and CSS before running them (`yarn build` and `bin/rails tailwindcss:build`). The
+dictionary must be available. Anki and RubyLLM integration specs use test doubles; neither a running Anki
+instance nor a live Gemini request is required. Passing these tests does not
+establish live model extraction accuracy, translation quality, latency, or cost.
+Browser system specs cover connection waiting, progress, failure/retry, late and
+stale completions, empty results, both review tabs, shared-save validation, source
+collapse/reopen, localization, history, and expandable learning examples. Build
+JavaScript and CSS before running them (`yarn build` and `bin/rails tailwindcss:build`). The
 dev container uses remote Selenium; outside it, install Chrome/Chromium and run
 `bundle exec rspec spec/system`.
 
@@ -229,11 +262,45 @@ learner assessments → explicit save
 ```
 
 `Japanese::TextAnalyzer` returns an unsaved `Analysis` with vocabulary grouped by
-lemma and part of speech, plus separate grammar assessments. The learner's choices
-are submitted together and persisted when the analysis is saved. Each saved
-analysis stores one assessment per word or grammar pattern; repeated occurrences
-are not counted separately. Encountered vocabulary readings remain transient and
-do not initialize `dictionary_reading`.
+lemma and part of speech, plus separate grammar assessments. Part of speech
+remains part of word identity and submitted data, although it is not displayed as
+a table column. The application locale is passed to the analyzer's explicit
+`output_language:` keyword through `Japanese::OutputLanguage`.
+
+The prompt asks for complete lexical coverage, normalization of inflected words,
+and vocabulary extraction even when the same phrase is also analyzed as grammar.
+It includes the reported omission examples; those prompt examples are not proof
+that a live model always extracts them correctly.
+
+| Data | Saved to the database? |
+| --- | --- |
+| Source text, word lemma/POS, learner choices, assessment timestamps | Yes, on explicit save |
+| Grammar pattern, source excerpt (`example`), meaning, contextual explanation, learner choice | Yes, on explicit save |
+| Vocabulary encountered forms/readings, translation, generated example and its translation | No; temporary review fields |
+| Grammar generated usage example and its translation | No; temporary review fields |
+| Output language and flashcard membership | No; temporary review fields |
+
+Temporary learning fields are sent with the save form so validation failures can
+redisplay them; they are not database columns. Ignored word and grammar entries
+create no new assessments. An all-ignored review may still save its source
+analysis. Existing history is preserved. Encountered readings do not initialize
+`Word#dictionary_reading`.
+
+### Diagnosing an analysis that appears stuck
+
+Follow the job/request ID in `log/development.log`. Jobs log `stage=analyzing`,
+`stage=flashcards`, `stage=broadcasting`, and `stage=completed`, with total elapsed
+time on completion. Exceptions include the failing stage, message, and backtrace.
+A `202 Accepted` response only confirms enqueueing; a `/cable` upgrade only
+confirms a WebSocket connection. Neither means the AI result is ready.
+
+A job that has only reached `analyzing` has not yet returned from the analyzer.
+After `broadcasting`/`completed`, check the intended stream subscription and
+browser console if nothing renders. A broadcast is not a browser receipt.
+Development jobs and the async cable adapter run in the web process; a separate
+Rails console cannot broadcast through that process's in-memory cable adapter.
+Restarting the server can lose in-flight jobs. Restart `bin/dev` after changing
+locale configuration, and keep both asset watchers running during UI development.
 
 The local `MorphologicalAnalyzer` and ordered `VocabularyExtractor` services remain
 available independently. See [Vocabulary grouping](docs/vocabulary-grouping.md)
@@ -245,6 +312,8 @@ for the behavior and tests of that deterministic pipeline.
   development principles.
 - [Development milestones](docs/milestones.md): implemented foundations, remaining
   work, acceptance criteria, and later possibilities.
+- [Next steps](docs/next-steps.md): the prioritized work queue, live-evaluation
+  cases, and completion criteria before expanding the product.
 
-The immediate focus is real-material extraction review and reading correctness,
-followed by a useful Study Inbox. Larger features follow real study feedback.
+Next: validate real-world reliability and AI quality, add correction and draft
+recovery where needed, then build a useful Study Inbox from saved encounter data.

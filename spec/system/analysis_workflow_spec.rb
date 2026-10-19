@@ -87,7 +87,7 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(page).to have_no_field("text", visible: true)
     expect(page).to have_no_css('#vocabulary-panel h3')
     expect(all("thead th").map(&:text)).to eq([
-      "Prior encounters", "Encountered form", "Base form & meaning", "Encountered reading", "Flashcards", "Assessment"
+      "Encountered form", "Base form & meaning", "Encountered reading", "Assessment"
     ])
     expect(page.evaluate_script("document.querySelector('.assessment-toolbar').compareDocumentPosition(document.querySelector('.vocabulary-table')) & Node.DOCUMENT_POSITION_PRECEDING")).not_to eq(0)
     find('.source-panel > summary').click
@@ -211,7 +211,12 @@ RSpec.describe "Analysis workflow", type: :system do
       within("#grammar-panel") do
         expect(page).to have_text(I18n.t("analyses.source_excerpt", locale: language))
         expect(page).to have_text(I18n.t("analyses.usage_example", locale: language))
+        expect(page).to have_css('.grammar-example', text: "寝ている")
+        expect(page).to have_no_css(".grammar-usage-example p", visible: true)
+        find('.grammar-usage-example summary', text: I18n.t("analyses.usage_example", locale: language)).click
         expect(page).to have_css(".grammar-usage-example p[lang='#{language}']", text: translation)
+        find('.grammar-usage-example summary').click
+        expect(page).to have_no_css(".grammar-usage-example p", visible: true)
       end
     end
   end
@@ -251,8 +256,8 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[採用 残業代 付く 流行る 気持ち 面 流行り 乗る 精神的 鼠 かじる 対策 専業主婦 家庭 節約 工夫 実践 返却日 意見交換 間接的 政治的]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(3) button").map { |cell| cell.text.strip }).to eq(expected_forms)
-    expect(find("tbody tr", text: "流行ってる").find("td:nth-child(4)").text).to eq("ハヤッテル")
+    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(find("tbody tr", text: "流行ってる").find("td:nth-child(3)").text).to eq("ハヤッテル")
     expect(find("tbody tr", text: "政治的").find('input[name$="[part_of_speech]"]', visible: :all).value).to eq("形容動詞")
 
     select known.label, from: "Set unassessed words to"
@@ -272,11 +277,11 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[問題 目を向ける はるかに 大きい]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(3) button").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
     expression_row = find("tbody tr", text: "目を向けた")
-    expect(expression_row.find("td:nth-child(4)").text).to eq("メヲムケタ")
+    expect(expression_row.find("td:nth-child(3)").text).to eq("メヲムケタ")
     expect(expression_row.find('input[name$="[part_of_speech]"]', visible: :all).value).to eq("表現")
-    expect(find("tbody tr", text: "はるかに").find("td:nth-child(4)").text).to eq("ハルカニ")
+    expect(find("tbody tr", text: "はるかに").find("td:nth-child(3)").text).to eq("ハルカニ")
 
     select known.label, from: "Set unassessed words to"
     click_button "Apply"
