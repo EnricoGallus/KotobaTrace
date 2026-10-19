@@ -17,7 +17,7 @@
     "KAMAL_REGISTRY_PASSWORD": "$KAMAL_REGISTRY_PASSWORD",
     "DB_HOST": "postgres",
     "ANKI_CONNECT_URL": "http://host.docker.internal:8765",
-    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
