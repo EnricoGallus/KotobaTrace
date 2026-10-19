@@ -1,5 +1,5 @@
 <% output_language = Japanese::OutputLanguage.normalize(analysis.output_language || I18n.locale) %>
-<div data-analyze-text-target="completion" data-analysis-request-id="<%= local_assigns[:request_id] %>">
+<div data-analysis-success="<%= analysis.word_assessments.any? || analysis.grammar_assessments.any? %>" data-analyze-text-target="completion" data-analysis-request-id="<%= local_assigns[:request_id] %>">
   <% if local_assigns[:flashcards_unavailable] %>
     <%= render "shared/notice", tone: "warning", title: t("word_history.flashcards_unavailable_title"), message: t("analyses.flashcards_unavailable") %>
   <% end %>
@@ -9,7 +9,7 @@
       <p><%= t("analyses.no_vocabulary") %></p>
     </div>
   <% else %>
-<%= form_with url: save_analysis_path, scope: :analysis, method: :post, class: "results-panel ui-panel", data: { controller: "result-tabs" } do |form| %>
+<%= form_with url: save_analysis_path, scope: :analysis, method: :post, class: "results-panel ui-panel", data: { controller: "result-tabs", action: "change->result-tabs#update", result_tabs_remaining_label_value: t("analyses.remaining", count: "{count}") } do |form| %>
   <header class="results-heading">
     <h2><%= t("analyses.results_title") %></h2>
     <p><%= t("analyses.results_hint") %></p>
@@ -41,49 +41,37 @@
       <button type="button" id="vocabulary-tab" role="tab" aria-controls="vocabulary-panel"
               aria-selected="true" data-result-tabs-target="tab"
               data-action="result-tabs#select keydown->result-tabs#navigate">
-        <%= t("analyses.vocabulary_title") %> <span class="results-tab-count"><%= analysis.word_assessments.size %></span>
+        <span class="tab-title"><%= t("analyses.vocabulary_title") %> <span class="results-tab-count"><%= analysis.word_assessments.size %></span></span>
+        <span hidden class="tab-remaining" data-result-tabs-target="remaining" data-panel="vocabulary-panel"></span>
       </button>
     <% end %>
     <% if analysis.grammar_assessments.any? %>
       <button type="button" id="grammar-tab" role="tab" aria-controls="grammar-panel"
               aria-selected="false" data-result-tabs-target="tab"
               data-action="result-tabs#select keydown->result-tabs#navigate">
-        <%= t("analyses.grammar_title") %> <span class="results-tab-count"><%= analysis.grammar_assessments.size %></span>
+        <span class="tab-title"><%= t("analyses.grammar_title") %> <span class="results-tab-count"><%= analysis.grammar_assessments.size %></span></span>
+        <span hidden class="tab-remaining" data-result-tabs-target="remaining" data-panel="grammar-panel"></span>
       </button>
     <% end %>
   </div>
 
+  <p hidden tabindex="-1" role="alert" class="assessment-validation" data-result-tabs-target="validation"><%= t("analyses.complete_assessments") %></p>
+
   <% if analysis.word_assessments.any? %>
   <section id="vocabulary-panel" role="tabpanel" aria-labelledby="vocabulary-tab"
            tabindex="0" data-result-tabs-target="panel">
-  <div class="assessment-toolbar">
-    <div>
-      <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
-      <%= select_tag :bulk_assessment,
-            options_from_collection_for_select(assessment_choices, :id, :label),
-            prompt: t("analyses.assessment_prompt"),
-            class: "select select-bordered select-sm",
-            data: { analyze_text_target: "bulkAssessment" } %>
-    </div>
-    <button type="button" class="btn btn-sm" data-action="analyze-text#applyAssessmentToUnselected">
-      <%= t("analyses.apply_assessment") %>
-    </button>
-  </div>
-
-  <h3 class="results-subheading"><%= t("analyses.vocabulary_title") %></h3>
   <p class="table-scroll-hint"><%= t("analyses.table_scroll_hint") %></p>
   <% passage_counts = saved_passage_counts(analysis) %>
   <div class="vocabulary-scroll" tabindex="0" role="region" aria-label="<%= t("analyses.results_title") %>">
     <table class="table vocabulary-table">
       <thead>
         <tr>
+          <th title="<%= t("word_history.saved_only") %>"><%= t("analyses.columns.passages") %></th>
           <th><%= t("analyses.columns.surface") %></th>
           <th><%= t("analyses.columns.base_form") %></th>
           <th><%= t("analyses.columns.reading") %></th>
-          <th><%= t("analyses.columns.part_of_speech") %></th>
           <th><%= t("analyses.columns.flashcards") %></th>
           <th><%= t("analyses.columns.assessment") %></th>
-          <th title="<%= t("word_history.saved_only") %>"><%= t("analyses.columns.passages") %></th>
         </tr>
       </thead>
 
@@ -94,6 +82,7 @@
           <% word_field_name = "#{field_name}[word_attributes]" %>
 
           <tr class="hover:bg-base-200">
+            <td class="tabular-nums" data-passage-count><%= passage_counts.fetch(word&.id, 0) %></td>
             <td lang="ja" class="text-lg font-medium">
               <% assessment.surfaces.to_a.each_with_index do |surface, surface_index| %>
                 <% if surface_index.positive? %><span>, </span><% end %>
@@ -131,7 +120,6 @@
                 <%= hidden_field_tag "#{field_name}[surface_readings][]", reading %>
               <% end %>
             </td>
-            <td class="text-base-content/70"><%= word&.part_of_speech %></td>
             <td>
               <% case assessment.in_flashcards %>
               <% when true %>
@@ -153,19 +141,31 @@
                     class: "select select-bordered select-sm",
                     data: { analyze_text_target: "assessment" } %>
             </td>
-            <td class="tabular-nums" data-passage-count><%= passage_counts.fetch(word&.id, 0) %></td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+  <div class="assessment-toolbar">
+    <div>
+      <%= label_tag :bulk_assessment, t("analyses.bulk_assessment_label"), class: "label" %>
+      <%= select_tag :bulk_assessment,
+            options_from_collection_for_select(assessment_choices, :id, :label),
+            prompt: t("analyses.assessment_prompt"),
+            class: "select select-bordered select-sm",
+            data: { analyze_text_target: "bulkAssessment" } %>
+    </div>
+    <button type="button" class="btn btn-sm" data-action="analyze-text#applyAssessmentToUnselected">
+      <%= t("analyses.apply_assessment") %>
+    </button>
+  </div>
+
   </section>
   <% end %>
 
   <% if analysis.grammar_assessments.any? %>
     <section id="grammar-panel" class="grammar-results" role="tabpanel" aria-labelledby="grammar-tab"
              tabindex="0" data-result-tabs-target="panel">
-      <h3 id="grammar-results-title"><%= t("analyses.grammar_title") %></h3>
       <ul class="grammar-assessment-list">
         <% analysis.grammar_assessments.each_with_index do |assessment, index| %>
           <% field_name = "analysis[grammar_assessments_attributes][#{index}]" %>
@@ -205,7 +205,8 @@
   <% end %>
 
   <div class="results-footer">
-    <%= form.submit t("analyses.save"), class: "btn btn-primary" %>
+    <p><%= t("analyses.save_all_hint") %></p>
+    <%= form.submit t("analyses.save_all"), class: "btn btn-primary" %>
   </div>
 <% end %>
   <% end %>

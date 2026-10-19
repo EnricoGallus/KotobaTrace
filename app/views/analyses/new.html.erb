@@ -6,13 +6,14 @@
      data-analyze-text-progress-label-value="<%= t("analyses.in_progress") %>">
   <%= turbo_stream_from @stream_key %>
 
-  <header class="workspace-heading">
-    <h1><%= t("app.name") %></h1>
-    <p><%= t("analyses.introduction") %></p>
-  </header>
-
+  <details open class="source-panel ui-panel" data-analyze-text-target="source">
+    <summary>
+      <span><%= t("analyses.source_text") %></span>
+      <span class="source-edit-label"><%= t("analyses.edit_source") %></span>
+    </summary>
+    <p class="source-introduction"><%= t("analyses.introduction") %></p>
   <%= form_with url: analysis_path, method: :post,
-        class: "analysis-input ui-panel",
+        class: "analysis-input",
         data: { analyze_text_target: "form", action: "submit->analyze-text#prepare turbo:submit-start->analyze-text#start turbo:submit-end->analyze-text#submissionFinished turbo:fetch-request-error->analyze-text#requestFailed" } do %>
     <fieldset class="input-body" data-analyze-text-target="controls">
       <%= hidden_field_tag :stream_key, @stream_key %>
@@ -28,6 +29,7 @@
       </div>
     </fieldset>
   <% end %>
+  </details>
 
   <p hidden class="analysis-progress" role="status" data-analyze-text-target="progress"><%= t("analyses.in_progress") %></p>
   <div id="analysis_results" aria-live="polite" data-analyze-text-target="results">

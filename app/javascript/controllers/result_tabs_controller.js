@@ -1,30 +1,42 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["navigation", "tab", "panel"]
+  static targets = ["navigation", "tab", "panel", "remaining", "validation"]
+  static values = { remainingLabel: String }
 
   connect() {
     this.navigationTarget.hidden = false
     this.activate(this.tabTargets[0])
+    this.update()
     this.onInvalid = (event) => {
-      // Native validation fires for every invalid field. Reveal the first one
-      // and keep that panel open so the browser can focus its control.
-      if (this.validating) {
-        event.preventDefault()
-        return
-      }
-      const panel = event.target.closest('[data-result-tabs-target="panel"]')
-      if (!panel) return
-      this.validating = true
-      this.activate(this.tabTargets.find((tab) => tab.getAttribute("aria-controls") === panel.id))
-      this.validationTimer = setTimeout(() => { this.validating = false }, 0)
+      // Keep the user's tab in place; summarize missing choices across both tabs.
+      event.preventDefault()
+      this.attempted = true
+      this.update()
+      this.validationTarget.focus()
     }
     this.element.addEventListener("invalid", this.onInvalid, true)
   }
 
   disconnect() {
     this.element.removeEventListener("invalid", this.onInvalid, true)
-    clearTimeout(this.validationTimer)
+  }
+
+  update() {
+    let totalMissing = 0
+    this.panelTargets.forEach((panel) => {
+      const fields = Array.from(panel.querySelectorAll("select[required]"))
+      const missing = fields.filter((field) => !field.value).length
+      totalMissing += missing
+      const label = this.remainingTargets.find((element) => element.dataset.panel === panel.id)
+      label.textContent = this.remainingLabelValue.replace("{count}", missing)
+      label.hidden = missing === 0
+      fields.forEach((field) => {
+        if (this.attempted && !field.value) field.setAttribute("aria-invalid", "true")
+        else field.removeAttribute("aria-invalid")
+      })
+    })
+    this.validationTarget.hidden = !this.attempted || totalMissing === 0
   }
 
   select(event) {

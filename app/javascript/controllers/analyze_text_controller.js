@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "connectionErrorTemplate", "completion", "bulkAssessment", "assessment"]
+  static targets = ["source", "form", "controls", "submit", "textInput", "requestId", "results", "progress", "errorTemplate", "connectionErrorTemplate", "completion", "bulkAssessment", "assessment"]
   static values = { progressLabel: String, connectingLabel: String, timeout: { type: Number, default: 600000 }, connectionTimeout: { type: Number, default: 30000 } }
 
   disconnect() {
@@ -15,6 +15,8 @@ export default class extends Controller {
       event.preventDefault()
       return
     }
+
+    this.sourceTarget.open = true
 
     // Broadcasts sent before the subscription connects are lost.
     if (!this.element.querySelector("turbo-cable-stream-source[connected]")) {
@@ -77,6 +79,7 @@ export default class extends Controller {
   completionTargetConnected(element) {
     if (element.dataset.analysisRequestId !== this.requestIdTarget.value) return
     this.finish()
+    if (element.dataset.analysisSuccess === "true") this.sourceTarget.open = false
   }
 
   filterStream(event) {
@@ -116,6 +119,7 @@ export default class extends Controller {
     this.assessmentTargets.forEach((select) => {
       if (!select.value) select.value = value
     })
+    this.bulkAssessmentTarget.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   retry() {

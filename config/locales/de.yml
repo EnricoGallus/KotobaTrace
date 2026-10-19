@@ -17,6 +17,12 @@ de:
     partly_understood: Teilweise verstanden
     understood: Verstanden
   analyses:
+    source_text: "Ausgangstext"
+    edit_source: "Bearbeiten und erneut analysieren"
+    remaining: "%{count} offen"
+    complete_assessments: "Bewerte vor dem Speichern alle Einträge in beiden Tabs."
+    save_all: "Alles speichern"
+    save_all_hint: "Wortschatz und Grammatik werden gemeinsam gespeichert."
     table_scroll_hint: Seitlich scrollen, um alle Spalten zu sehen.
     introduction: Lerne das Japanisch, dem du begegnest. Füge Text ein, überprüfe ihn und verfolge deinen Wortschatz.
     results_title: Analyseergebnisse
@@ -50,7 +56,7 @@ de:
       reading: Lesung im Text
       part_of_speech: Wortart
       flashcards: Lernkarten
-      passages: Frühere Texte
+      passages: Frühere Begegnungen
       assessment: Bewertung
     grammar_assessment_label: Grammatikbewertung
     flashcard_status:

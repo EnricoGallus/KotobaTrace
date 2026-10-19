@@ -67,15 +67,44 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expect(page).to have_text("Flashcard lookup is unavailable")
     expect(page).to have_css("tbody tr", minimum: 1)
-    expect(page).to have_button("Analyze", disabled: false)
-    expect(page).to have_field("text", with: "猫を見た", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
+    expect(page).to have_field("text", with: "猫を見た", disabled: false, visible: :all)
     expect(page).to have_no_css('[data-analyze-text-target="progress"]', visible: true)
     all("tbody select").each { |select| select.select(choice.label) }
-    click_button "Save"
+    click_button "Save all"
 
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.text).to eq("猫を見た")
     expect(Analysis.last.word_assessments.where(assessment_choice: choice)).to exist
+  end
+
+  it "collapses successful input and lets the user reopen it without losing the text" do
+    open_analysis
+    submit_text("猫")
+    perform_enqueued_jobs
+
+    expect(page).to have_css('.source-panel:not([open])')
+    expect(page).to have_no_field("text", visible: true)
+    expect(page).to have_no_css('#vocabulary-panel h3')
+    expect(all("thead th").map(&:text)).to eq([
+      "Prior encounters", "Encountered form", "Base form & meaning", "Encountered reading", "Flashcards", "Assessment"
+    ])
+    expect(page.evaluate_script("document.querySelector('.assessment-toolbar').compareDocumentPosition(document.querySelector('.vocabulary-table')) & Node.DOCUMENT_POSITION_PRECEDING")).not_to eq(0)
+    find('.source-panel > summary').click
+    expect(page).to have_field("text", with: "猫")
+    expect(page).to have_button("Analyze", disabled: false)
+  end
+
+  it "switches application language from the app bar menu" do
+    open_analysis
+    within('.app-bar') do
+      expect(page).to have_link("KotobaTrace")
+      find('.language-menu summary').click
+      click_link "Deutsch"
+    end
+    expect(page).to have_css('html[lang="de"]')
+    expect(page).to have_button("Analysieren")
+    expect(page).to have_css('.language-menu summary', text: "Deutsch")
   end
 
   [ [ 1280, 900 ], [ 390, 844 ] ].each do |width, height|
@@ -102,15 +131,22 @@ RSpec.describe "Analysis workflow", type: :system do
       expect(page).to have_text("ongoing action")
       expect(page).to have_no_css("#vocabulary-panel", visible: true)
 
-      # Saving from Grammar must reveal the first missing vocabulary choice.
-      click_button "Save"
-      expect(page).to have_css('#vocabulary-tab[aria-selected="true"]')
-      expect(page).to have_css("#vocabulary-panel select:focus")
-      first("tbody select").select(vocabulary_choice.label)
-      click_button "Save"
+      # Save all explains what is missing without changing the user's tab.
+      expect(page).to have_button("Save all", count: 1)
+      click_button "Save all"
       expect(page).to have_css('#grammar-tab[aria-selected="true"]')
-      expect(page).to have_css("#grammar-panel select:focus")
+      expect(page).to have_css('.assessment-validation:focus', text: "both tabs")
+      expect(page).to have_css('#vocabulary-tab .tab-remaining', text: "1 left")
+      expect(Analysis.count).to eq(0)
+      find('#vocabulary-tab').click
+      select vocabulary_choice.label, from: "Set unassessed words to"
+      click_button "Apply"
+      expect(page).to have_no_css('#vocabulary-tab .tab-remaining')
+      click_button "Save all"
+      expect(page).to have_css('#vocabulary-tab[aria-selected="true"]')
+      find('#grammar-tab').click
       select grammar_choice.label, from: "Grammar assessment"
+      expect(page).to have_no_css('.assessment-validation', visible: true)
 
       find('#grammar-tab').send_keys(:home)
       expect(first("tbody select").value).to eq(vocabulary_choice.id.to_s)
@@ -119,7 +155,7 @@ RSpec.describe "Analysis workflow", type: :system do
       expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
       FileUtils.mkdir_p(Rails.root.join("tmp", "design-review"))
       page.save_screenshot(Rails.root.join("tmp", "design-review", "grammar-tab-#{width}.png"))
-      click_button "Save"
+      click_button "Save all"
 
       expect(page).to have_text("Your analysis results will appear here")
       expect(Analysis.last.word_assessments.sole.assessment_choice).to eq(vocabulary_choice)
@@ -190,13 +226,13 @@ RSpec.describe "Analysis workflow", type: :system do
 
     cat_row = find("tbody tr", text: "猫")
     cat_row.find("select").select(known.label)
-    click_button "Save"
+    click_button "Save all"
     expect(page.evaluate_script("document.querySelector('.results-panel').checkValidity()")).to be(false)
     expect(Analysis.count).to eq(0)
     expect(WordAssessment.count).to eq(0)
 
     find("tbody tr", text: "犬").find("select").select(ignore.label)
-    click_button "Save"
+    click_button "Save all"
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.words.pluck(:lemma)).to eq([ "猫" ])
     expect(Word.exists?(lemma: "犬")).to be(false)
@@ -215,13 +251,13 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[採用 残業代 付く 流行る 気持ち 面 流行り 乗る 精神的 鼠 かじる 対策 専業主婦 家庭 節約 工夫 実践 返却日 意見交換 間接的 政治的]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
-    expect(find("tbody tr", text: "流行ってる").find("td:nth-child(3)").text).to eq("ハヤッテル")
-    expect(find("tbody tr", text: "政治的").find("td:nth-child(4)").text).to eq("形容動詞")
+    expect(all("tbody tr td:nth-child(3) button").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(find("tbody tr", text: "流行ってる").find("td:nth-child(4)").text).to eq("ハヤッテル")
+    expect(find("tbody tr", text: "政治的").find('input[name$="[part_of_speech]"]', visible: :all).value).to eq("形容動詞")
 
     select known.label, from: "Set unassessed words to"
     click_button "Apply"
-    click_button "Save"
+    click_button "Save all"
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.text).to eq(text)
     expect(Analysis.last.words.pluck(:lemma)).to match_array(expected_forms)
@@ -236,15 +272,15 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expected_forms = %w[問題 目を向ける はるかに 大きい]
     expect(page).to have_css("tbody tr", count: expected_forms.length)
-    expect(all("tbody tr td:nth-child(2) button").map { |cell| cell.text.strip }).to eq(expected_forms)
+    expect(all("tbody tr td:nth-child(3) button").map { |cell| cell.text.strip }).to eq(expected_forms)
     expression_row = find("tbody tr", text: "目を向けた")
-    expect(expression_row.find("td:nth-child(3)").text).to eq("メヲムケタ")
-    expect(expression_row.find("td:nth-child(4)").text).to eq("表現")
-    expect(find("tbody tr", text: "はるかに").find("td:nth-child(3)").text).to eq("ハルカニ")
+    expect(expression_row.find("td:nth-child(4)").text).to eq("メヲムケタ")
+    expect(expression_row.find('input[name$="[part_of_speech]"]', visible: :all).value).to eq("表現")
+    expect(find("tbody tr", text: "はるかに").find("td:nth-child(4)").text).to eq("ハルカニ")
 
     select known.label, from: "Set unassessed words to"
     click_button "Apply"
-    click_button "Save"
+    click_button "Save all"
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.words.pluck(:lemma)).to match_array(expected_forms)
   end
@@ -271,7 +307,7 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(all("tbody select").map(&:value)).to eq([ unknown.id.to_s, known.id.to_s, known.id.to_s ])
     expect(Analysis.count).to eq(0)
 
-    click_button "Save"
+    click_button "Save all"
     expect(page).to have_text("Your analysis results will appear here")
     expect(Analysis.last.word_assessments.where(assessment_choice: known).count).to eq(2)
     expect(Analysis.last.word_assessments.where(assessment_choice: unknown).count).to eq(1)
@@ -306,7 +342,7 @@ RSpec.describe "Analysis workflow", type: :system do
     end
     expect(page.current_url).to eq(original_url)
     expect(cat_row.find("select").value).to eq(unknown.id.to_s)
-    expect(page).to have_field("text", with: "猫。猫。猫。犬。")
+    expect(page).to have_field("text", with: "猫。猫。猫。犬。", visible: :all)
     expect(Analysis.count).to eq(2)
 
     find("#analysis_results tbody tr", text: "犬").click_button "犬"
@@ -318,7 +354,7 @@ RSpec.describe "Analysis workflow", type: :system do
     expect(cat_row.find("select").value).to eq(unknown.id.to_s)
 
     find("#analysis_results tbody tr", text: "犬").find("select").select(known.label)
-    click_button "Save"
+    click_button "Save all"
     expect(page).to have_text("Your analysis results will appear here")
     expect(word.reload.analyses.count).to eq(3)
     submit_text("猫")
@@ -338,12 +374,12 @@ RSpec.describe "Analysis workflow", type: :system do
       word = Word.create!(lemma: "猫", part_of_speech: "名詞")
       8.times { Analysis.create!(text: "猫がいる文章です。" * 12).word_assessments.create!(word: word, assessment_choice: known) }
       open_analysis
-      initial_width = find('[data-analyze-text-target="form"]').native.rect.width
+      initial_width = find(".source-panel").native.rect.width
       expect(initial_width).to be > width * 0.8
       submit_text("猫と犬")
       perform_enqueued_jobs
       expect(page).to have_css("#analysis_results tbody tr", count: 2)
-      expect(find('[data-analyze-text-target="form"]').native.rect.width).to be_within(1).of(initial_width)
+      expect(find(".source-panel").native.rect.width).to be_within(1).of(initial_width)
       expect(find(".results-panel").native.rect.width).to be_within(1).of(initial_width)
       expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
       screenshot_dir = Rails.root.join("tmp", "design-review")
@@ -372,8 +408,8 @@ RSpec.describe "Analysis workflow", type: :system do
     submit_text("猫")
 
     expect(page).to have_text("Retry analysis")
-    expect(page).to have_field("text", with: "猫", disabled: false)
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_field("text", with: "猫", disabled: false, visible: :all)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
     expect(page).to have_no_css('[data-analyze-text-target="progress"]', visible: true)
   end
 
@@ -382,13 +418,13 @@ RSpec.describe "Analysis workflow", type: :system do
     page.execute_script("document.querySelector('[data-controller~=analyze-text]').setAttribute('data-analyze-text-timeout-value', '1000')")
     submit_text("猫")
     expect(page).to have_text("Retry analysis")
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
 
     perform_enqueued_jobs
 
     expect(page).to have_css("tbody tr", minimum: 1)
     expect(page).not_to have_text("Retry analysis")
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
   end
 
   it "ignores an older completion after retrying a timed-out request" do
@@ -408,7 +444,7 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expect(page).to have_css("tbody tr", text: "犬")
     expect(page).to have_no_css("tbody tr", text: "猫")
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
   end
 
   it "waits for a delayed subscription and submits exactly once when it connects" do
@@ -427,7 +463,7 @@ RSpec.describe "Analysis workflow", type: :system do
     perform_enqueued_jobs
 
     expect(page).to have_css("tbody tr", minimum: 1)
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
     expect(page).not_to have_text("Could not start analysis")
   end
 
@@ -439,7 +475,7 @@ RSpec.describe "Analysis workflow", type: :system do
     click_button "Analyze"
 
     expect(page).to have_text("Could not connect to analysis updates")
-    expect(page).to have_field("text", with: "猫", disabled: false)
+    expect(page).to have_field("text", with: "猫", disabled: false, visible: :all)
     expect(enqueued_jobs).to be_empty
   end
 
@@ -452,7 +488,7 @@ RSpec.describe "Analysis workflow", type: :system do
 
     expect(page).to have_text("Analysis could not be completed")
     expect(page).not_to have_text("Private error")
-    expect(page).to have_field("text", with: "猫", disabled: false)
+    expect(page).to have_field("text", with: "猫", disabled: false, visible: :all)
     allow(Japanese::MorphologicalAnalyzer).to receive(:call).and_call_original
     click_button "Retry analysis"
     expect(page).to have_css('form[aria-busy="true"] fieldset[disabled]')
@@ -467,7 +503,7 @@ RSpec.describe "Analysis workflow", type: :system do
     perform_enqueued_jobs
 
     expect(page).to have_css("tbody tr", minimum: 1)
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
     expect(page).not_to have_text("Analysis could not be completed")
   end
 
@@ -481,7 +517,7 @@ RSpec.describe "Analysis workflow", type: :system do
     click_button "Analyze"
 
     expect(page).to have_css("tbody tr", minimum: 1)
-    expect(page).to have_button("Analyze", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
     expect(page).to have_no_css('form[aria-busy="true"]')
   end
 
@@ -501,7 +537,7 @@ RSpec.describe "Analysis workflow", type: :system do
     perform_enqueued_jobs
 
     expect(page).to have_text("学習対象の語彙が見つかりませんでした")
-    expect(page).to have_button("解析", disabled: false)
+    expect(page).to have_button("解析", disabled: false, visible: :all)
     expect(page).not_to have_button("保存")
     expect(page).not_to have_css("table")
   end
@@ -512,8 +548,8 @@ RSpec.describe "Analysis workflow", type: :system do
     click_button "Analyze"
 
     expect(page).to have_text("Enter some Japanese text")
-    expect(page).to have_button("Analyze", disabled: false)
-    expect(page).to have_field("text", disabled: false)
+    expect(page).to have_button("Analyze", disabled: false, visible: :all)
+    expect(page).to have_field("text", disabled: false, visible: :all)
     expect(enqueued_jobs).to be_empty
   end
 end

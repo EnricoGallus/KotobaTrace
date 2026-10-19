@@ -176,20 +176,22 @@
     width: min(calc(100% - 2rem), 76rem);
     margin-inline: auto;
   }
-  .language-nav {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-block: 1rem;
-    font-size: 0.875rem;
-  }
-  .language-nav [aria-current="page"] { font-weight: 650; text-decoration: underline; text-underline-offset: 0.3em; }
+  .app-bar { position: relative; z-index: 20; border-bottom: 1px solid var(--color-base-300); background: var(--color-base-100); }
+  .app-bar .navbar { min-height: 4rem; padding-inline: 0; gap: 1rem; justify-content: space-between; }
+  .app-brand { font-size: 1.5rem; line-height: 1.2; }
+  .language-menu .dropdown-content { width: 12rem; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid var(--color-base-300); }
+  .language-menu [aria-current="page"] { font-weight: 700; background: var(--color-base-200); }
   .app-main { padding-block: 1.5rem 4rem; }
   .analysis-workspace { width: 100%; min-width: 0; }
-  .workspace-heading { margin-bottom: 1.75rem; }
-  .workspace-heading p { margin-top: 0.6rem; max-width: 44rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
+  .source-panel { margin-bottom: 1.5rem; }
+  .source-panel > summary { display: flex; align-items: center; gap: 0.7rem; padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; }
+  .source-panel > summary::before { content: "▸"; color: var(--color-primary); }
+  .source-panel[open] > summary::before { transform: rotate(90deg); }
+  .source-edit-label { margin-left: auto; font-size: 0.8rem; color: var(--color-primary); text-align: right; }
+  .source-panel[open] .source-edit-label { display: none; }
+  .source-introduction { padding-inline: 1.5rem; font-size: 0.9rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
   .ui-panel { border: 1px solid var(--color-base-300); border-radius: 1rem; background: var(--color-base-100); }
-  .analysis-input { margin-bottom: 2rem; }
+  .analysis-input { margin: 0; }
   .input-body { min-inline-size: 0; padding: clamp(1rem, 3vw, 1.75rem); }
   .input-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 650; }
   .analysis-input textarea { display: block; width: 100%; max-width: 100%; min-height: 12rem; font-size: 1rem; line-height: 1.8; background: var(--color-base-100); }
@@ -204,30 +206,35 @@
   .workspace-placeholder { padding: 1.5rem 0; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); }
   .analysis-progress { padding: 1rem; margin-bottom: 1rem; border-inline-start: 3px solid var(--color-primary); }
   .analysis-progress[hidden] { display: none; }
-  .results-panel { width: 100%; min-width: 0; overflow: hidden; }
+  .results-panel { width: 100%; min-width: 0; overflow: clip; }
   .results-tabs { display: flex; gap: 0.5rem; margin: 1rem 1.5rem 0; border-bottom: 1px solid var(--color-base-300); }
   .results-tabs[hidden], .results-panel [role="tabpanel"][hidden] { display: none; }
-  .results-tabs [role="tab"] { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.9rem; border-bottom: 3px solid transparent; font-weight: 600; cursor: pointer; }
+  .results-tabs [role="tab"] { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.75rem 0.4rem; border-bottom: 3px solid transparent; font-weight: 600; cursor: pointer; }
   .results-tabs [aria-selected="true"] { color: var(--color-primary); border-bottom-color: var(--color-primary); }
   .results-tabs [role="tab"]:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+  .tab-title { display: flex; gap: 0.5rem; align-items: center; }
+  .tab-remaining { font-size: 0.75rem; font-weight: 400; color: var(--color-rest); }
+  .assessment-validation { margin: 1rem 1.5rem; padding: 0.75rem; border-left: 3px solid var(--color-error); font-size: 0.85rem; }
+  .assessment-validation[hidden], .tab-remaining[hidden] { display: none; }
+  .results-panel select[aria-invalid="true"] { border-color: var(--color-error); }
   .results-tab-count { padding: 0.05rem 0.45rem; border-radius: 1rem; background: var(--color-base-200); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
   .results-heading { padding: 1.5rem 1.5rem 0; }
   .table-scroll-hint { display: none; margin: 0 1.5rem 1rem; font-size: 0.9rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); }
   .results-heading h2, .empty-state h2 { font-size: 1.3rem; }
-  .results-subheading { margin: 0 1.5rem 1rem; font-size: 1.15rem; }
   .results-heading p, .empty-state p { margin-top: 0.4rem; color: color-mix(in srgb, var(--color-base-content) 72%, transparent); font-size: 0.9rem; }
   .assessment-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; padding: 1rem 1.5rem 1.5rem; }
   .assessment-toolbar .label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; }
   .vocabulary-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-block: 1px solid var(--color-base-300); }
-  .vocabulary-table { width: 100%; min-width: 62rem; }
+  .vocabulary-table { width: 100%; min-width: 56rem; }
   .vocabulary-table thead { background: color-mix(in srgb, var(--color-base-200) 65%, var(--color-base-100)); }
   .vocabulary-table th { font-size: 0.75rem; font-weight: 650; white-space: nowrap; color: var(--color-base-content); padding-block: 1rem; }
   .vocabulary-table td { padding-block: 1rem; }
   .vocabulary-table select { min-width: 12rem; }
   .membership-unchecked { font-size: 0.75rem; color: color-mix(in srgb, var(--color-base-content) 65%, transparent); white-space: nowrap; }
-  .results-footer { display: flex; justify-content: flex-end; padding: 1rem 1.5rem; }
+  .results-footer { position: sticky; bottom: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; border-top: 1px solid var(--color-base-300); background: var(--color-base-100); }
+  .results-footer p { max-width: 32rem; font-size: 0.8rem; color: var(--color-rest); }
+  .results-footer .btn { flex-shrink: 0; }
   .grammar-results { padding: 1.5rem; }
-  .grammar-results h3 { margin-bottom: 1rem; font-size: 1.15rem; }
   .grammar-assessment-list { display: grid; gap: 0.75rem; padding: 0; list-style: none; }
   .grammar-assessment { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: 0.7rem; }
   .grammar-assessment-content { flex: 1 1 22rem; min-width: 0; }

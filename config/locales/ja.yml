@@ -17,6 +17,12 @@ ja:
     partly_understood: 少しわかる
     understood: わかる
   analyses:
+    source_text: "入力テキスト"
+    edit_source: "編集して再解析"
+    remaining: "残り%{count}件"
+    complete_assessments: "保存する前に、両方のタブのすべての項目を評価してください。"
+    save_all: "まとめて保存"
+    save_all_hint: "語彙と文法をまとめて保存します。"
     table_scroll_hint: 横にスクロールすると、すべての列を確認できます。
     introduction: 出会った日本語を、自分の語彙に。文章を貼り付けて、語彙を確認し、学習の履歴を残しましょう。
     results_title: 解析結果
@@ -50,7 +56,7 @@ ja:
       reading: 文中の読み
       part_of_speech: 品詞
       flashcards: 単語カード
-      passages: 過去の文章数
+      passages: 過去の出会い
       assessment: 評価
     grammar_assessment_label: 文法の評価
     flashcard_status:

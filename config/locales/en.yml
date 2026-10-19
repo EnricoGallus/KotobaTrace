@@ -17,6 +17,12 @@ en:
     partly_understood: Partly understand
     understood: Understand
   analyses:
+    source_text: "Source text"
+    edit_source: "Edit & analyze again"
+    remaining: "%{count} left"
+    complete_assessments: "Choose an assessment for every item in both tabs before saving."
+    save_all: "Save all"
+    save_all_hint: "Vocabulary and grammar are saved together."
     table_scroll_hint: Swipe or scroll sideways to see all columns.
     introduction: Learn the Japanese you encounter. Paste, review, and build your vocabulary history.
     results_title: Analysis results
@@ -50,7 +56,7 @@ en:
       reading: Encountered reading
       part_of_speech: Part of speech
       flashcards: Flashcards
-      passages: Prior passages
+      passages: Prior encounters
       assessment: Assessment
     grammar_assessment_label: Grammar assessment
     flashcard_status:

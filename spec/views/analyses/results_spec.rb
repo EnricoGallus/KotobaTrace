@@ -11,7 +11,7 @@ RSpec.describe "analyses/_results", type: :view do
     render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [], grammar_assessment_choices: [] }
 
     cells = Nokogiri::HTML(rendered).css("tbody tr td")
-    expect(cells[2].text.strip).to eq("キサイサレタ")
+    expect(cells[3].text.strip).to eq("キサイサレタ")
     expect(word.dictionary_reading).to eq("キサイサ")
     expect(Nokogiri::HTML(rendered).at_css('input[name$="[dictionary_reading]"]')).to be_nil
   end
@@ -27,7 +27,7 @@ RSpec.describe "analyses/_results", type: :view do
       analysis: analysis, assessment_choices: [], grammar_assessment_choices: []
     }
 
-    expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
+    expect(Nokogiri::HTML(rendered).css("tbody tr td")[3].text.strip).to eq("")
   end
 
   it "does not present a saved dictionary reading as an encountered reading when none was supplied" do
@@ -38,7 +38,7 @@ RSpec.describe "analyses/_results", type: :view do
 
     render partial: "analyses/results", locals: { analysis: analysis, assessment_choices: [] }
 
-    expect(Nokogiri::HTML(rendered).css("tbody tr td")[2].text.strip).to eq("")
+    expect(Nokogiri::HTML(rendered).css("tbody tr td")[3].text.strip).to eq("")
   end
 
   { true => "In flashcards", false => "Not in flashcards", nil => "Not checked" }.each do |membership, label|
@@ -78,7 +78,7 @@ RSpec.describe "analyses/_results", type: :view do
     }
 
     expect(rendered).to include("Flashcard lookup is unavailable")
-    expect(Nokogiri::HTML(rendered).at_css('input[type="submit"]')["value"]).to eq("Save")
+    expect(Nokogiri::HTML(rendered).at_css('input[type="submit"]')["value"]).to eq("Save all")
   end
 
   it "renders grammar assessments with the source example and nested save fields" do

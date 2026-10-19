@@ -17,6 +17,12 @@ vi:
     partly_understood: Hiểu một phần
     understood: Đã hiểu
   analyses:
+    source_text: "Văn bản gốc"
+    edit_source: "Chỉnh sửa và phân tích lại"
+    remaining: "Còn %{count}"
+    complete_assessments: "Hãy đánh giá tất cả các mục trong cả hai tab trước khi lưu."
+    save_all: "Lưu tất cả"
+    save_all_hint: "Từ vựng và ngữ pháp được lưu cùng nhau."
     table_scroll_hint: Vuốt hoặc cuộn ngang để xem tất cả các cột.
     introduction: Học tiếng Nhật từ những gì bạn gặp. Dán văn bản, xem lại và theo dõi vốn từ vựng của bạn.
     results_title: Kết quả phân tích
@@ -50,7 +56,7 @@ vi:
       reading: Cách đọc trong văn bản
       part_of_speech: Từ loại
       flashcards: Thẻ ghi nhớ
-      passages: Văn bản trước đây
+      passages: Số lần đã gặp
       assessment: Đánh giá
     grammar_assessment_label: Đánh giá ngữ pháp
     flashcard_status:
