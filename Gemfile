@@ -1,5 +1,7 @@
 source "https://rubygems.org"
 
+ruby file: ".ruby-version"
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
@@ -70,6 +72,9 @@ group :test do
 end
 
 gem "natto", "~> 1.2"
+gem "csv", "~> 3.3"
 gem "anki_connect", "~> 0.2.0"
 
 gem "tailwindcss-rails", "~> 4.6"
+
+gem "ruby_llm", "~> 2.1"

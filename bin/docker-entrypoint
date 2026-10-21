@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
+# Prepare the database and refresh required assessment choices on server startup.
+# db:prepare alone does not reload seeds for an existing database.
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
+  ./bin/rails db:prepare db:seed
 fi
 
 exec "${@}"

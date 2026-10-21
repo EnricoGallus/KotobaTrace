@@ -1,0 +1,34 @@
+<section class="history-section" aria-labelledby="history_assessment_title">
+  <h4 id="history_assessment_title"><%= t("word_history.choice_summary") %></h4>
+  <% if history.empty? %>
+    <p class="history-empty"><%= t("word_history.no_history") %></p>
+  <% else %>
+    <ul class="assessment-totals">
+      <% choice_counts.each do |key, count| %>
+        <li><span><%= key ? t("assessment_choices.#{key}") : t("word_history.unassessed") %>:</span> <strong><%= count %></strong></li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
+<% if history.any? %>
+  <section class="history-section" aria-labelledby="history_timeline_title">
+    <h4 id="history_timeline_title"><%= t("word_history.timeline") %></h4>
+    <ol class="history-timeline">
+      <% history.each do |assessment| %>
+        <li data-history-entry>
+          <div class="history-entry-heading">
+            <div>
+              <span class="history-entry-label"><%= t("word_history.saved_at") %></span>
+              <%= time_tag assessment.analysis.created_at, format: "%Y-%m-%d %H:%M %Z" %>
+            </div>
+            <span class="assessment-label"><%= assessment.assessment_choice&.label || t("word_history.unassessed") %></span>
+          </div>
+          <details class="history-passage">
+            <summary><%= t("word_history.view_passage") %></summary>
+            <p lang="ja"><%= assessment.analysis.text %></p>
+          </details>
+        </li>
+      <% end %>
+    </ol>
+  </section>
+<% end %>

@@ -1,0 +1,88 @@
+ja:
+  app:
+    name: KotobaTrace
+  language:
+    choose: 言語を選択
+    english: English
+    japanese: 日本語
+  assessment_choices:
+    ignore: スキップ
+    unknown: まだ知らない
+    reading_only: 読みだけ知っている
+    meaning_only: 意味だけ知っている
+    known: 読みも意味も知っている
+  grammar_assessment_choices:
+    ignore: スキップ
+    unknown: まだ知らない
+    partly_understood: 少しわかる
+    understood: わかる
+  analyses:
+    source_text: "入力テキスト"
+    edit_source: "編集して再解析"
+    remaining: "残り%{count}件"
+    complete_assessments: "保存する前に、両方のタブのすべての項目を評価してください。"
+    save_all: "まとめて保存"
+    save_all_hint: "語彙と文法をまとめて保存します。"
+    table_scroll_hint: 横にスクロールすると、すべての列を確認できます。
+    introduction: 出会った日本語を、自分の語彙に。文章を貼り付けて、語彙を確認し、学習の履歴を残しましょう。
+    results_title: 解析結果
+    vocabulary_title: 語彙
+    grammar_title: 文法
+    results_hint: 語彙と文法を確認して評価し、保存済みの単語履歴を確認できます。
+    error_title: 解析を確認してください
+    no_vocabulary_title: 学習対象の語彙が見つかりませんでした
+    usage_example: 用例
+    source_excerpt: 入力文からの引用
+    text_label: 解析するテキスト
+    submit: 解析
+    retry: もう一度解析
+    no_vocabulary: 学習対象の語彙が見つかりませんでした。日本語の文章や単語リストをお試しください。名前・数字・機能語などは除外されることがあります。
+    flashcards_unavailable: 単語カードに接続できません。語彙の評価と保存はできますが、登録状況は未確認です。
+    errors:
+      blank_input: 解析する日本語のテキストを入力してください。
+      failed: 解析を完了できませんでした。入力したテキストは残っています。もう一度お試しください。
+      connection_failed: 解析結果の受信に接続できませんでした。テキストは送信されていません。もう一度お試しください。
+      request_failed: 解析の開始または応答の受信に失敗しました。接続を確認して、もう一度お試しください。
+    save: 保存
+    bulk_assessment_label: 未評価の単語をまとめて評価
+    apply_assessment: 適用
+    assessment_prompt: 評価を選択
+    connecting: 解析結果の受信に接続中…
+    in_progress: 解析中…
+    empty_results: 解析結果がここに表示されます。
+    columns:
+      surface: 文中の表記
+      base_form: 基本形・意味
+      reading: 文中の読み
+      part_of_speech: 品詞
+      flashcards: 単語カード
+      passages: 過去の出会い
+      assessment: 評価
+    grammar_assessment_label: 文法の評価
+    flashcard_status:
+      included: 単語カードに登録済み
+      not_included: 単語カードに未登録
+      not_checked: 未確認
+  word_history:
+    flashcards_unavailable_title: 単語カードに接続できません
+    load_failed_title: 履歴を読み込めませんでした
+    title: 単語の履歴
+    close: 閉じる
+    loading: 単語の履歴を読み込み中…
+    load_failed: 履歴を読み込めませんでした。解析結果と選択した評価はそのまま残っています。
+    retry: もう一度試す
+    saved_only: 保存済みの文章のみを集計しています。現在の未保存の解析結果は含まれません。
+    passages: 出会った文章数
+    first_encounter: 初めて出会った日時
+    last_encounter: 最後に出会った日時
+    never: まだ履歴がありません
+    choice_summary: 評価の集計
+    no_history: この単語の保存済みの履歴はまだありません。
+    unassessed: 未評価
+    timeline: 評価の履歴
+    saved_at: 文章の保存日時
+    passage: 文章
+    view_passage: 文章を見る
+    flashcards_not_configured: 単語カードの連携が無効または未設定のため、登録状況は未確認です。
+    note: ノート
+    tags: タグ

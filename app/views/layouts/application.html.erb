@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "Kotoba Trace" %></title>
+    <title><%= content_for(:title) || t("app.name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Kotoba Trace">
@@ -24,7 +24,23 @@
   </head>
 
   <body>
-    <main class="container mx-auto mt-28 px-5 flex">
+    <header class="app-bar">
+      <nav class="navbar app-shell" aria-label="<%= t("language.choose") %>">
+        <h1 class="app-brand"><%= link_to t("app.name"), new_analysis_path %></h1>
+        <details class="dropdown dropdown-end language-menu">
+          <summary class="btn btn-ghost btn-sm" aria-label="<%= t("language.choose") %>">
+            <%= Japanese::OutputLanguage::LABELS.fetch(I18n.locale.to_s) %> <span aria-hidden="true">⌄</span>
+          </summary>
+          <ul class="menu dropdown-content bg-base-100 rounded-box">
+            <% I18n.available_locales.each do |locale| %>
+              <li><%= link_to Japanese::OutputLanguage::LABELS.fetch(locale.to_s), url_for(locale: locale), lang: locale,
+                    aria: { current: I18n.locale == locale ? "page" : nil } %></li>
+            <% end %>
+          </ul>
+        </details>
+      </nav>
+    </header>
+    <main class="app-shell app-main">
       <%= yield %>
     </main>
   </body>

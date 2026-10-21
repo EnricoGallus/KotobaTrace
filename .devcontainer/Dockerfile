@@ -9,4 +9,6 @@ RUN sudo apt-get update && \
       mecab-naist-jdic \
     && sudo rm -rf /var/lib/apt/lists/*
 
+ENV MECAB_DICDIR="/var/lib/mecab/dic/naist-jdic"
+
 WORKDIR /workspace

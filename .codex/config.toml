@@ -1,0 +1,65 @@
+[mcp_servers.rails]
+command = "rails-mcp-server"
+args = ["--single-project"]
+cwd = "/workspace"
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# Context7 - Documentation
+# -----------------------------------------------
+
+[mcp_servers.context7]
+command = "npx"
+args = [
+  "-y",
+  "@upstash/context7-mcp"
+]
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# PostgreSQL - Restricted mode
+# -----------------------------------------------
+
+[mcp_servers.postgres]
+command = "uvx"
+args = [
+  "--python", "3.12",
+  "--managed-python",
+  "--with", "mcp<2",
+  "postgres-mcp",
+  "--access-mode=restricted"
+]
+startup_timeout_sec = 60
+
+[mcp_servers.postgres.env]
+DATABASE_URI = "postgresql://postgres:password@db:5432/kotoba_trace_development"
+
+
+# -----------------------------------------------
+# Sequential Thinking
+# -----------------------------------------------
+
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-sequential-thinking"
+]
+startup_timeout_sec = 30
+
+
+# -----------------------------------------------
+# Filesystem - macOS project directory
+# -----------------------------------------------
+
+[mcp_servers.filesystem]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-filesystem",
+  "/workspace"
+]
+cwd = "/workspace"
+startup_timeout_sec = 30

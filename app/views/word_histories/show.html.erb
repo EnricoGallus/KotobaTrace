@@ -1,0 +1,5 @@
+<%= turbo_frame_tag "word_history" do %>
+  <%= render "overview", word: @word, history: @history %>
+  <%= render "assessments", history: @history, choice_counts: @choice_counts %>
+  <%= render "flashcards", word: @word, flashcards: @flashcards %>
+<% end %>

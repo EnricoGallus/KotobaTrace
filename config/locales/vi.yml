@@ -1,0 +1,94 @@
+vi:
+  app:
+    name: KotobaTrace
+  language:
+    choose: Chọn ngôn ngữ
+    english: English
+    japanese: 日本語
+  assessment_choices:
+    ignore: Bỏ qua
+    unknown: Chưa biết
+    reading_only: Chỉ biết cách đọc
+    meaning_only: Chỉ biết nghĩa
+    known: Biết cả hai
+  grammar_assessment_choices:
+    ignore: Bỏ qua
+    unknown: Chưa biết mẫu này
+    partly_understood: Hiểu một phần
+    understood: Đã hiểu
+  analyses:
+    source_text: "Văn bản gốc"
+    edit_source: "Chỉnh sửa và phân tích lại"
+    remaining: "Còn %{count}"
+    complete_assessments: "Hãy đánh giá tất cả các mục trong cả hai tab trước khi lưu."
+    save_all: "Lưu tất cả"
+    save_all_hint: "Từ vựng và ngữ pháp được lưu cùng nhau."
+    table_scroll_hint: Vuốt hoặc cuộn ngang để xem tất cả các cột.
+    introduction: Học tiếng Nhật từ những gì bạn gặp. Dán văn bản, xem lại và theo dõi vốn từ vựng của bạn.
+    results_title: Kết quả phân tích
+    vocabulary_title: Từ vựng
+    grammar_title: Ngữ pháp
+    results_hint: Xem lại từ vựng và ngữ pháp, đánh giá kiến thức của bạn và xem lịch sử từ đã lưu.
+    error_title: Cần kiểm tra quá trình phân tích
+    no_vocabulary_title: Không tìm thấy từ vựng để học
+    usage_example: Ví dụ sử dụng
+    source_excerpt: Trích từ văn bản của bạn
+    text_label: Văn bản cần phân tích
+    submit: Phân tích
+    retry: Phân tích lại
+    no_vocabulary: Không tìm thấy từ vựng để học. Hãy thử một đoạn văn hoặc danh sách từ tiếng Nhật. Tên riêng, số và từ chức năng có thể bị lọc bỏ.
+    flashcards_unavailable: Không thể kết nối với thẻ ghi nhớ. Bạn vẫn có thể đánh giá và lưu từ vựng; trạng thái trên thẻ chưa được kiểm tra.
+    errors:
+      blank_input: Hãy nhập văn bản tiếng Nhật trước khi phân tích.
+      failed: Không thể hoàn tất phân tích. Văn bản của bạn vẫn còn; vui lòng thử lại.
+      connection_failed: Không thể kết nối để nhận kết quả phân tích. Văn bản của bạn chưa được gửi. Vui lòng thử lại.
+      request_failed: Không thể bắt đầu phân tích hoặc nhận phản hồi. Hãy kiểm tra kết nối và thử lại.
+    save: Lưu
+    bulk_assessment_label: Đánh giá chung cho các từ chưa được đánh giá
+    apply_assessment: Áp dụng
+    assessment_prompt: Chọn mức đánh giá
+    connecting: Đang kết nối để nhận kết quả phân tích…
+    in_progress: Đang phân tích…
+    empty_results: Kết quả phân tích sẽ xuất hiện ở đây.
+    columns:
+      surface: Dạng trong văn bản
+      base_form: Dạng từ điển và nghĩa
+      reading: Cách đọc trong văn bản
+      part_of_speech: Từ loại
+      flashcards: Thẻ ghi nhớ
+      passages: Số lần đã gặp
+      assessment: Đánh giá
+    grammar_assessment_label: Đánh giá ngữ pháp
+    flashcard_status:
+      included: Có trong thẻ ghi nhớ
+      not_included: Không có trong thẻ ghi nhớ
+      not_checked: Chưa kiểm tra
+  word_history:
+    flashcards_unavailable_title: Không thể kết nối với thẻ ghi nhớ
+    load_failed_title: Không thể tải lịch sử
+    title: Lịch sử từ
+    close: Đóng
+    loading: Đang tải lịch sử từ…
+    load_failed: Không thể tải lịch sử từ. Kết quả phân tích và lựa chọn của bạn vẫn được giữ nguyên.
+    retry: Thử lại
+    saved_only: Chỉ đếm các văn bản đã lưu. Kết quả phân tích hiện tại chưa lưu không được tính.
+    passages: Các văn bản đã gặp
+    first_encounter: Lần gặp đầu tiên
+    last_encounter: Lần gặp gần nhất
+    never: Chưa gặp
+    choice_summary: Tổng hợp đánh giá
+    no_history: Từ này chưa có lịch sử được lưu.
+    unassessed: Chưa đánh giá
+    timeline: Lịch sử đánh giá
+    saved_at: Thời điểm lưu văn bản
+    passage: Văn bản
+    view_passage: Xem văn bản
+    flashcards_not_configured: Thẻ ghi nhớ đã bị tắt hoặc chưa được thiết lập; trạng thái trên thẻ chưa được kiểm tra.
+    note: Ghi chú
+    tags: Nhãn
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: không được để trống
+      required: phải có
+      invalid: không hợp lệ

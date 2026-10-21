@@ -1,31 +1,88 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  app:
+    name: KotobaTrace
+  language:
+    choose: Choose language
+    english: English
+    japanese: Japanese
+  assessment_choices:
+    ignore: Ignore
+    unknown: Don't know yet
+    reading_only: Know the reading only
+    meaning_only: Know the meaning only
+    known: Know both
+  grammar_assessment_choices:
+    ignore: Ignore
+    unknown: Don't know this pattern yet
+    partly_understood: Partly understand
+    understood: Understand
+  analyses:
+    source_text: "Source text"
+    edit_source: "Edit & analyze again"
+    remaining: "%{count} left"
+    complete_assessments: "Choose an assessment for every item in both tabs before saving."
+    save_all: "Save all"
+    save_all_hint: "Vocabulary and grammar are saved together."
+    table_scroll_hint: Swipe or scroll sideways to see all columns.
+    introduction: Learn the Japanese you encounter. Paste, review, and build your vocabulary history.
+    results_title: Analysis results
+    vocabulary_title: Vocabulary
+    grammar_title: Grammar
+    results_hint: Review vocabulary and grammar, assess what you know, and explore saved word history.
+    error_title: Analysis needs your attention
+    no_vocabulary_title: No study vocabulary found
+    usage_example: Usage example
+    source_excerpt: From your text
+    text_label: Text to analyze
+    submit: Analyze
+    retry: Retry analysis
+    no_vocabulary: No study vocabulary was found. Try a Japanese passage or vocabulary list; names, numbers, and function words may be filtered out.
+    flashcards_unavailable: Flashcard lookup is unavailable. You can still assess and save vocabulary; membership has not been checked.
+    errors:
+      blank_input: Enter some Japanese text before analyzing.
+      failed: Analysis could not be completed. Your text is still here; please try again.
+      connection_failed: Could not connect to analysis updates. Your text has not been submitted. Please try again.
+      request_failed: Could not start analysis or receive its response. Check your connection and try again.
+    save: Save
+    bulk_assessment_label: Set unassessed words to
+    apply_assessment: Apply
+    assessment_prompt: Choose an assessment
+    connecting: Connecting to analysis updates…
+    in_progress: "Analysis in progress…"
+    empty_results: Your analysis results will appear here.
+    columns:
+      surface: Encountered form
+      base_form: Base form & meaning
+      reading: Encountered reading
+      part_of_speech: Part of speech
+      flashcards: Flashcards
+      passages: Prior encounters
+      assessment: Assessment
+    grammar_assessment_label: Grammar assessment
+    flashcard_status:
+      included: In flashcards
+      not_included: Not in flashcards
+      not_checked: Not checked
+  word_history:
+    flashcards_unavailable_title: Flashcards unavailable
+    load_failed_title: History could not be loaded
+    title: Word history
+    close: Close
+    loading: Loading word history…
+    load_failed: Could not load word history. Your analysis and selections are still here.
+    retry: Try again
+    saved_only: Only saved passages are counted. The current unsaved analysis is excluded.
+    passages: Passages encountered
+    first_encounter: First encounter
+    last_encounter: Last encounter
+    never: Not encountered yet
+    choice_summary: Assessment totals
+    no_history: This word has no saved history yet.
+    unassessed: Unassessed
+    timeline: Assessment history
+    saved_at: Passage saved
+    passage: Passage
+    view_passage: View passage
+    flashcards_not_configured: Flashcard lookup is disabled or not configured; membership has not been checked.
+    note: Note
+    tags: Tags
